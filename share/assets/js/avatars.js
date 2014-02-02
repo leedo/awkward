@@ -272,6 +272,7 @@ $(document).ready(function() {
     channels.find('.channel.active').removeClass('active');
     channels.append(elem);
 
+    input.focus();
     input.on("keypress", function(event) {
       if (event.charCode == 13) {
         ws.send(JSON.stringify({

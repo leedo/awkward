@@ -64,4 +64,7 @@ body {
   background: #eee;
   border-top: 1px solid #ccc;
 }
-
+.channel .input-wrap,
+.channel h2 {
+  z-index: 9;
+}

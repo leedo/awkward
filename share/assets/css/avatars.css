@@ -21,6 +21,9 @@ body {
   margin: 0;
   display: block;
 }
+.messages tr.disconnected .chatvatar {
+  -webkit-filter: grayscale(100%);
+}
 .messages {
   width: 100%;
 }

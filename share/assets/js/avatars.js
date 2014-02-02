@@ -166,7 +166,9 @@ $(document).ready(function() {
         appendMessage(data.body.from, data.body.channel, data.body.msg);
       }
       else if (data.type == "disconnect") {
-        delete clients[data.client];
+        console.log(data);
+        $('.messages').find('tr[data-user="'+data.body.client+'"]').addClass("disconnected");
+        delete clients[data.body.client];
       }
     };
 

@@ -66,12 +66,13 @@ $(document).ready(function() {
         'class': "chatvatar"
       });
 
-      messages.find('tr[data-user="'+user+'"] > td.nick > video').each(function(i,v) {
-        v.pause();
-      });
-
       video.attr('src', URL.createObjectURL(stream));
       nick.append(video);
+
+      setTimeout(function() {
+        video.get(0).pause();
+      }, 3000);
+
       if (scroll) {
         video.onload = function() {
           $(document).scrollTop(outer_height);

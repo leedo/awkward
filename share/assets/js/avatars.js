@@ -25,6 +25,12 @@ $(document).ready(function() {
     }
   );
 
+  $(window).on("focus", function() {
+    $('.channel.active > .input-wrap > input').each(function() {
+      $(this).focus();
+    });
+  });
+
   function appendMessage(user, chan, message) {
     var messages = $('#chan-'+chan).find('.messages')
       , last_row = messages.find("tr:last-child")

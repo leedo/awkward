@@ -1,0 +1,64 @@
+body {
+  padding-top: 20px;
+  padding-bottom: 40px;
+}
+.messages td.nick {
+  width: 100px;
+  padding: 0;
+  background: #eee;
+}
+.messages td.body {
+  position: relative;
+  border-bottom: 1px solid #eee;
+  padding: 2px 10px;
+}
+.messages td {
+  vertical-align: top;
+}
+.chatvatar {
+  width: 150px;
+  height: auto;
+  margin: 0;
+  display: block;
+}
+.messages {
+  width: 100%;
+}
+#join-dialog {
+  width: 300px;
+  background: #eee;
+  border: 1px solid #ccc;
+  margin: 100px auto 0 auto;
+  padding: 10px;
+}
+#join-dialog input[type="text"] {
+  width: 300px;
+}
+#start {
+  width: 400px;
+  margin: 100px auto 0 auto;
+}
+.channel h2 {
+  position: fixed;
+  top: 0px;
+  right: 0px;
+  left: 0px;
+  width: 100%;
+  background: #eee;
+  margin: 0;
+  font-size: 16px;
+  font-weight: normal;
+  text-align: center;
+  padding: 2px 0;
+  border-bottom: 1px solid #ccc;
+}
+.channel .input-wrap {
+  position: fixed;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  padding: 2px;
+  background: #eee;
+  border-top: 1px solid #ccc;
+}
+

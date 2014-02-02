@@ -6,9 +6,15 @@ $(document).ready(function() {
     , own_stream = null
     , ws = openWebsocket();
 
-  navigator.webkitGetUserMedia({audio: false, video: true}, function(s) {
-    own_stream = s;
-  });
+  navigator.getUserMedia(
+    { video: true, audio: false},
+    function(s) {
+      own_stream = s;
+    },
+    function(e) {
+      console.log("error getting video stream: " + e);
+    }
+  );
 
   function appendMessage(user, chan, message) {
     var messages = $('#chan-'+chan).find('.messages')
@@ -81,7 +87,7 @@ $(document).ready(function() {
       return clients[peer]['client'];
     }
 
-    var client = new webkitRTCPeerConnection(
+    var client = new RTCPeerConnection(
       {"iceServers": [{"url": "stun:stun.l.google.com:19302"}]},
       {"optional": []}
     );
@@ -216,6 +222,8 @@ $(document).ready(function() {
     client.createOffer(function(desc) {
       client.setLocalDescription(desc);
       success(desc);
+    }, function(e) {
+      console.log("failed to create offer: " + e);
     });
   }
 

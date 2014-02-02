@@ -25,7 +25,6 @@ sub add_client {
 
 sub remove_client {
   my ($self, $client) = @_;
-  warn "removing ", $client->id;
   delete $self->{members}{$client->id};
 }
 

@@ -36,12 +36,10 @@ $(document).ready(function() {
       , inner_height = window.innerHeight
       , scroll = inner_height + $(document).scrollTop() >= outer_height;
 
-    console.log(scroll);
-
     if (consecutive) {
       last_row.find(".body").append("<br>" + message);
       if (scroll)
-        $(document).scrollTop(outer_height);
+        $(document).scrollTop($(document).height());
       return;
     }
 
@@ -66,18 +64,20 @@ $(document).ready(function() {
         'class': "chatvatar"
       });
 
-      video.attr('src', URL.createObjectURL(stream));
-      nick.append(video);
-
       setTimeout(function() {
         video.get(0).pause();
       }, 3000);
 
       if (scroll) {
-        video.onload = function() {
-          $(document).scrollTop(outer_height);
-        }
+        video.on("loadeddata", function() {
+          setTimeout(function() {
+            $(document).scrollTop($(document).height());
+          }, 10);
+        });
       }
+
+      video.attr('src', URL.createObjectURL(stream));
+      nick.append(video);
     }
 
     new_row.prepend(nick);
@@ -85,7 +85,7 @@ $(document).ready(function() {
 
     messages.append(new_row);
     if (scroll)
-      $(document).scrollTop(outer_height);
+      $(document).scrollTop($(document).height());
   }
 
   function addIceCandidate(from, candidate) {

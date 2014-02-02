@@ -7,7 +7,15 @@ $(document).ready(function() {
     , ws = openWebsocket();
 
   navigator.getUserMedia(
-    { video: true, audio: false},
+    {
+      video: {
+        mandatory: {
+          maxWidth: 320,
+          maxHeight: 180
+        },
+      },
+      audio: false
+    },
     function(s) {
       own_stream = s;
     },

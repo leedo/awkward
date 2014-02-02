@@ -18,6 +18,7 @@ $(document).ready(function() {
     },
     function(s) {
       own_stream = s;
+      $('#channel,#join').removeAttr('disabled');
     },
     function(e) {
       console.log("error getting video stream: " + e);
@@ -195,7 +196,7 @@ $(document).ready(function() {
 
   $("#join").on("click", function(e) {
     var chan = $('#channel').val();
-    $('#channel').prop('disabled', 'disabled');
+    $('#channel,#join').prop('disabled', 'disabled');
     $('#start').hide();
 
     ws.send(JSON.stringify({

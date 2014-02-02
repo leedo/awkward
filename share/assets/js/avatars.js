@@ -99,7 +99,7 @@ $(document).ready(function() {
       , h = video.height()
       , v = video.get(0);
 
-    var c = $('<canvas/>').get(0);
+    var c = $('<canvas/>',{'class':'chatvatar'}).get(0);
     c.width = w;
     c.height = h;
 

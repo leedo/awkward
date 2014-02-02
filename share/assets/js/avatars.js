@@ -237,6 +237,8 @@ $(document).ready(function() {
     client.createAnswer(function(desc) {
       client.setLocalDescription(desc);
       success(desc);
+    }, function(e) {
+      console.log("failed to create answer: " + e);
     });
   }
 

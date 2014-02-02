@@ -43,7 +43,7 @@ $(document).ready(function() {
       , scroll = inner_height + $(document).scrollTop() >= outer_height;
 
     if (consecutive) {
-      last_row.find(".body").append("<br>" + message);
+      last_row.find(".body").append("<br>").append($('<span/>').text(message));
       if (scroll)
         $(document).scrollTop($(document).height());
 
@@ -96,7 +96,7 @@ $(document).ready(function() {
     }
 
     new_row.prepend(nick);
-    new_row.append($('<td/>',{'class':"body"}).html(message));
+    new_row.append($('<td/>',{'class':"body"}).text(message));
 
     messages.append(new_row);
     if (scroll)
@@ -278,10 +278,11 @@ $(document).ready(function() {
   }
 
   function renderChannel(name, id) {
+    $('#channel,#join').removeAttr('disabled');
     var elem = $('<div/>', {id: "chan-"+id, 'class': 'channel active'});
     var input_wrap = $('<div/>', {'class': 'input-wrap'});
     var input = $('<input/>', {type: "text", 'class': 'form-control'});
-    elem.append($('<h2/>').html(name));
+    elem.append($('<h2/>').text(name));
     elem.append($('<table/>', {
       'class': 'messages',
       cellspacing: 0,

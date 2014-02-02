@@ -46,15 +46,6 @@ $(document).ready(function() {
       last_row.find(".body").append("<br>").append($('<span/>').text(message));
       if (scroll)
         $(document).scrollTop($(document).height());
-
-      last_row.find(".nick > video").each(function() {
-        var v = this;
-        v.play();
-        setTimeout(function() {
-          v.pause();
-        }, 1000);
-      });
-
       return;
     }
 
@@ -80,7 +71,7 @@ $(document).ready(function() {
       });
 
       setTimeout(function() {
-        video.get(0).pause();
+        replaceVideoWithStill(video);
       }, 3000);
 
       if (scroll) {
@@ -101,6 +92,21 @@ $(document).ready(function() {
     messages.append(new_row);
     if (scroll)
       $(document).scrollTop($(document).height());
+  }
+
+  function replaceVideoWithStill(video) {
+    var w = video.width()
+      , h = video.height()
+      , v = video.get(0);
+
+    var c = $('<canvas/>').get(0);
+    c.width = w;
+    c.height = h;
+
+    var context = c.getContext('2d');
+    context.drawImage(v, 0, 0, w, h);
+
+    video.replaceWith(c);
   }
 
   function addIceCandidate(from, candidate) {

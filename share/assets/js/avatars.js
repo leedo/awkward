@@ -40,6 +40,15 @@ $(document).ready(function() {
       last_row.find(".body").append("<br>" + message);
       if (scroll)
         $(document).scrollTop($(document).height());
+
+      last_row.find(".nick > video").each(function() {
+        var v = this;
+        v.play();
+        setTimeout(function() {
+          v.pause();
+        }, 1000);
+      });
+
       return;
     }
 

@@ -65,6 +65,11 @@ $(document).ready(function() {
         muted: "muted",
         'class': "chatvatar"
       });
+
+      messages.find('tr[data-user="'+user+'"] > td.nick > video').each(function(i,v) {
+        v.pause();
+      });
+
       video.attr('src', URL.createObjectURL(stream));
       nick.append(video);
       if (scroll) {

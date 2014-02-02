@@ -1,6 +1,5 @@
 $(document).ready(function() {
-  var latest_peer = 0
-    , clients = {}
+  var clients = {}
     , id = null
     , channels = $('#channels')
     , own_stream = null
@@ -19,6 +18,7 @@ $(document).ready(function() {
     function(s) {
       own_stream = s;
       $('#channel,#join').removeAttr('disabled');
+      $('#channel').focus();
     },
     function(e) {
       console.log("error getting video stream: " + e);
@@ -215,7 +215,13 @@ $(document).ready(function() {
     return ws;
   }
 
-  $("#join").on("click", function(e) {
+  $("#join").on("click", joinChannel);
+  $("#channel").on("keypress", function(e) {
+    if (e.charCode == 13)
+      joinChannel(e);
+  });
+
+  function joinChannel(e) {
     var chan = $('#channel').val();
     $('#channel,#join').prop('disabled', 'disabled');
     $('#start').hide();
@@ -224,8 +230,7 @@ $(document).ready(function() {
       action: "join",
       channel: chan
     }));
-
-  });
+  }
 
   function handleSignal(ws, from, signal) {
     if (signal.type == "offer") {

@@ -99,14 +99,22 @@ $(document).ready(function() {
       , h = video.height()
       , v = video.get(0);
 
-    var c = $('<canvas/>',{'class':'chatvatar'}).get(0);
+    var c = document.createElement('canvas');
     c.width = w;
     c.height = h;
+    var ctx = c.getContext('2d');
+    ctx.drawImage(v, 0, 0, w, h);
 
-    var context = c.getContext('2d');
-    context.drawImage(v, 0, 0, w, h);
+    var img = $('<img/>', {
+      width: w,
+      height: h,
+      src: c.toDataURL(),
+      'class': 'chatvatar'
+    });
 
-    video.replaceWith(c);
+    img.on("load", function() {
+      video.replaceWith(this);
+    });
   }
 
   function addIceCandidate(from, candidate) {

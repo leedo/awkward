@@ -108,7 +108,7 @@ $(document).ready(function() {
     var img = $('<img/>', {
       width: w,
       height: h,
-      src: c.toDataURL(),
+      src: c.toDataURL("image/jpeg"),
       'class': 'chatvatar'
     });
 

@@ -1,5 +1,4 @@
 body {
-  padding-top: 23px;
   padding-bottom: 40px;
 }
 .messages td.nick {
@@ -44,31 +43,16 @@ body {
   left: 50%;
   margin-left: -200px;
 }
-.channel h2 {
-  position: fixed;
-  top: 0px;
-  right: 0px;
-  left: 0px;
-  width: 100%;
-  background: #eee;
-  margin: 0;
-  font-size: 16px;
-  font-weight: normal;
-  text-align: center;
-  padding: 2px 0;
-  border-bottom: 1px solid #ccc;
-  border-top: 1px solid #fff;
-}
-.channel .input-wrap {
+#input-wrap {
   position: fixed;
   bottom: 0px;
   left: 0px;
-  right: 0px;
+  right: 180px;
   padding: 2px;
   background: #eee;
   border-top: 1px solid #ccc;
 }
-.channel .input-wrap,
+#input-wrap,
 .channel h2 {
   z-index: 9;
 }
@@ -77,4 +61,18 @@ body {
 }
 .channel.active {
   display: block;
+}
+#nav {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  width: 180px;
+  padding: 10px;
+  border-left: 1px solid #bbb;
+  background: #eee;
+  box-shadow: inset 3px 0 3px rgba(0,0,0,0.2);
+}
+#channels {
+  margin-right: 180px;
 }

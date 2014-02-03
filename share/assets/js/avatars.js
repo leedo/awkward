@@ -2,6 +2,8 @@ $(document).ready(function() {
   var clients = {}
     , id = null
     , channels = $('#channels')
+    , nav = $('#nav')
+    , input = $('#input-wrap input')
     , own_stream = null
     , ws = openWebsocket();
 
@@ -26,13 +28,29 @@ $(document).ready(function() {
   );
 
   $(window).on("focus", function() {
-    $('.channel.active > .input-wrap > input').each(function() {
-      $(this).focus();
-    });
+    input.focus();
+  });
+
+
+  nav.on('click', 'li', function(e) {
+    e.preventDefault();
+    focusChannel($(this).attr('data-chan'));
+  });
+
+  input.on("keypress", function(event) {
+    if (event.charCode == 13) {
+      var id = channels.find('.active').attr('data-chan');
+      ws.send(JSON.stringify({
+        action: "saymsg",
+        channel: id,
+        msg: input.val()
+      }));
+      input.val('');
+    }
   });
 
   function appendMessage(user, chan, message) {
-    var messages = $('#chan-'+chan).find('.messages')
+    var messages = channels.find('.channel[data-chan="'+chan+'"] .messages')
       , last_row = messages.find("tr:last-child")
       , last_user = last_row.attr('data-user')
       , consecutive = last_user == user
@@ -291,32 +309,31 @@ $(document).ready(function() {
     });
   }
 
+  function focusChannel(id) {
+    channels.find('.channel.active').removeClass('active');
+    nav.find('li.active').removeClass('active');
+    channels.find('.channel[data-chan="'+id+'"]').addClass('active');
+    nav.find('li[data-chan="'+id+'"]').addClass('active');
+  }
+
   function renderChannel(name, id) {
-    $('#channel,#join').removeAttr('disabled');
-    var elem = $('<div/>', {id: "chan-"+id, 'class': 'channel active'});
-    var input_wrap = $('<div/>', {'class': 'input-wrap'});
-    var input = $('<input/>', {type: "text", 'class': 'form-control'});
-    elem.append($('<h2/>').text(name));
+    var elem = $('<div/>', {
+      'data-chan': id,
+      'class': 'channel active'
+    });
     elem.append($('<table/>', {
       'class': 'messages',
       cellspacing: 0,
       cellpadding: 0,
       border: 0
     }));
-    elem.append(input_wrap.append(input));
-    channels.find('.channel.active').removeClass('active');
     channels.append(elem);
 
-    input.focus();
-    input.on("keypress", function(event) {
-      if (event.charCode == 13) {
-        ws.send(JSON.stringify({
-          action: "saymsg",
-          channel: id,
-          msg: input.val()
-        }));
-        input.val('');
-      }
-    });
+    var a = $('<a/>', {href: '#'}).text(name);
+    var li = $('<li/>', {
+      'class': 'active',
+      'data-chan': id
+    }).html(a);
+    nav.append(li);
   }
 });

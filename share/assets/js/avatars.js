@@ -61,6 +61,14 @@ $(document).ready(function() {
       joinChannel(e);
   });
 
+  function appendEvent(chan, message) {
+    var messages = channels_elem.find('.channel[data-chan="'+chan+'"] .messages')
+      , tr = $('<tr/>', {'class':'event'})
+      , td = $('<td/>', {'colspan':'2'}).text(message);
+
+      messages.append(tr.append(td));
+  }
+
   function appendMessage(user, chan, message) {
     var messages = channels_elem.find('.channel[data-chan="'+chan+'"] .messages')
       , last_row = messages.find("tr:last-child")
@@ -224,6 +232,7 @@ $(document).ready(function() {
     $.each(channels, function(chan, users) {
       if (users[id])
         delete channels[chan][id];
+        appendEvent(chan, "someone disconnected");
     });
   }
 
@@ -308,6 +317,7 @@ $(document).ready(function() {
     else if (data.type == "join") {
       if (channels[data.body.channel]) {
         channels[data.body.channel][data.body.from] = new Date();
+        appendEvent(data.body.channel, "someone joined");
         sendRTCData(peer, "joined", {channel: data.body.channel});
       }
     }
@@ -323,6 +333,7 @@ $(document).ready(function() {
     }
     else if (data.type == "part") {
       $('.messages').find('tr[data-user="'+data.body.client+'"]').addClass("disconnected");
+      appendEvent(data.body.channel, "someone left");
       delete channels[data.body.channel][data.body.from];
     }
   }

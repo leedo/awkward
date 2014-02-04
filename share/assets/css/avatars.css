@@ -81,5 +81,11 @@ body {
   -webkit-filter: grayscale(100%);
 }
 #channels {
-  margin-right: 180px;
+  margin-right: 150px;
+}
+.messages tr.event td {
+  padding: 5px 10px;
+  background: #CFEAFF;
+  font-size: 12px;
+  color: #333;
 }

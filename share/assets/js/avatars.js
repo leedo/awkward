@@ -1,11 +1,13 @@
 $(document).ready(function() {
   var clients = {}
-    , id = null
-    , channels = $('#channels')
-    , nav = $('#nav')
-    , input = $('#input-wrap input')
+    , channels = {}
+    , join_queue = []
+    , own_id = null
     , own_stream = null
-    , ws = openWebsocket();
+    , ws = openWebsocket()
+    , channels_elem = $('#channels')
+    , nav = $('#nav')
+    , input = $('#input-wrap input');
 
   navigator.getUserMedia(
     {
@@ -21,6 +23,7 @@ $(document).ready(function() {
       own_stream = s;
       $('#channel,#join').removeAttr('disabled');
       $('#channel').focus();
+      $('#self-stream').attr('src', URL.createObjectURL(s));
     },
     function(e) {
       console.log("error getting video stream: " + e);
@@ -39,18 +42,27 @@ $(document).ready(function() {
 
   input.on("keypress", function(event) {
     if (event.charCode == 13) {
-      var id = channels.find('.active').attr('data-chan');
-      ws.send(JSON.stringify({
-        action: "saymsg",
-        channel: id,
-        msg: input.val()
-      }));
+      var chan_id = channels_elem.find('.active').attr('data-chan');
+      var msg = input.val();
+      appendMessage(own_id, chan_id, msg);
+      $.each(channels[chan_id], function(member, time) {
+        sendRTCData(member, "msg", {
+          channel: chan_id,
+          msg: msg
+        });
+      });
       input.val('');
     }
   });
 
+  $("#join").on("click", joinChannel);
+  $("#channel").on("keypress", function(e) {
+    if (e.charCode == 13)
+      joinChannel(e);
+  });
+
   function appendMessage(user, chan, message) {
-    var messages = channels.find('.channel[data-chan="'+chan+'"] .messages')
+    var messages = channels_elem.find('.channel[data-chan="'+chan+'"] .messages')
       , last_row = messages.find("tr:last-child")
       , last_user = last_row.attr('data-user')
       , consecutive = last_user == user
@@ -74,7 +86,7 @@ $(document).ready(function() {
 
     var nick = $('<td/>', {'class': 'nick'});
 
-    if (user == id) {
+    if (user == own_id) {
       stream = own_stream;
     }
     else if (clients[user] && clients[user]['stream']) {
@@ -151,21 +163,38 @@ $(document).ready(function() {
 
     var client = new RTCPeerConnection(
       {"iceServers": [{"url": "stun:stun.l.google.com:19302"}]},
-      {"optional": []}
+      {"optional": [{RtpDataChannels: true}]}
     );
+    var data = client.createDataChannel('data', {reliable: false});
 
     client.onicecandidate = function(event) {
       if (event.candidate) {
-        var desc = {
-          type: "candidate",
-          candidate: event.candidate
-        };
-        ws.send(JSON.stringify({
+        sendWSData({
           action: "signal",
           id: peer,
-          sig: desc
-        }));
+          sig: {
+            type: "candidate",
+            candidate: event.candidate
+          }
+        });
       }
+    };
+
+    data.onopen = function() {
+      if (join_queue[peer]) {
+        $(join_queue[peer]).each(function(i, chan){
+          sendRTCData(peer, "join", {channel: chan});
+        })
+      }
+    };
+
+    data.onclose = function() {
+      removePeer(peer);
+    };
+
+    data.onmessage = function(e) {
+      var data = JSON.parse(e.data);
+      handleRTCMessage(data, peer);
     };
 
     client.onaddstream = function(event) {
@@ -173,28 +202,29 @@ $(document).ready(function() {
     };
 
     client.oniceconnectionstatechange = function(event) {
-      //console.log("state change", event);
+      if (client.iceGatheringState == "complete" && client.iceConnectionState == "disconnected")
+        removePeer(peer);
     };
 
-    client.onsignalingstatechange = function(event) {
-      //console.log("signal change", event);
-    };
-
-    client.onremovestream = function(event) {
-      //console.log("remove remote stream", event);
-    };
-
-    if (own_stream) {
+    if (own_stream)
       client.addStream(own_stream);
-    }
 
     clients[peer] = {
       stream: null,
-      peer: peer,
+      data: data,
       client: client
     };
 
     return client;
+  }
+
+  function removePeer(id) {
+    $('.messages').find('tr[data-user="'+id+'"]').addClass("disconnected");
+    delete clients[id];
+    $.each(channels, function(chan, users) {
+      if (users[id])
+        delete channels[chan][id];
+    });
   }
 
   function openWebsocket() {
@@ -208,71 +238,115 @@ $(document).ready(function() {
 
     ws.onmessage = function(e) {
       var data = JSON.parse(e.data);
-      if (data.type == "setup") {
-        id = data.body.id;
-      }
-      else if (data.type == "signal") {
-        handleSignal(ws, data.body.from, data.body.data);
-      }
-      else if (data.type == "join") {
-        renderChannel(data.body.name, data.body.id);
-        if (data.body.members.length) {
-          $(data.body.members).each(function(i, member) {
-            console.log(member);
-            createOffer(member, function(desc) {
-              console.log(desc);
-              ws.send(JSON.stringify({
-                id: member,
-                action: "signal",
-                sig: desc
-              }));
-            });
-          });
-        }
-      }
-      else if (data.type == "showmsg") {
-        appendMessage(data.body.from, data.body.channel, data.body.msg);
-      }
-      else if (data.type == "disconnect") {
-        console.log(data);
-        $('.messages').find('tr[data-user="'+data.body.client+'"]').addClass("disconnected");
-        delete clients[data.body.client];
-      }
-    };
-
-    ws.onopen = function(e) {
-      //console.log(e);
+      handleWSMessage(data);
     };
 
     return ws;
   }
 
-  $("#join").on("click", joinChannel);
-  $("#channel").on("keypress", function(e) {
-    if (e.charCode == 13)
-      joinChannel(e);
-  });
+  function queueJoin (peer, chan) {
+    if (!join_queue[peer])
+      join_queue[peer] = [];
+    join_queue[peer].push(chan);
+  }
+
+  function handleWSMessage (data) {
+    if (data.type == "setup") {
+      own_id = data.body.id;
+    }
+    else if (data.type == "signal") {
+      handleSignal(ws, data.body.from, data.body.data);
+    }
+    else if (data.type == "join") {
+      renderChannel(data.body.name, data.body.id);
+
+      // setup new channel
+      channels[data.body.id] = {};
+
+      $(data.body.members).each(function(i, member) {
+        // setup connection and queue join for new users
+        if (!clients[member]) {
+          queueJoin(member, data.body.id);
+          createOffer(member, function(desc) {
+            sendWSData({
+              id: member,
+              action: "signal",
+              sig: desc
+            });
+          });
+        }
+        // immediately send join to existing peer
+        else {
+          sendRTCData(member, "join", {
+            channel: data.body.id,
+            msg: msg
+          });
+        }
+      });
+    }
+  }
+
+  function sendWSData (data) {
+    ws.send(JSON.stringify(data));
+  }
+
+  function sendRTCData (to, type, body) {
+    var data = clients[to]['data'];
+    if (data) {
+      body.from = own_id;
+      data.send(JSON.stringify({
+        type: type,
+        body: body
+      }));
+    }
+  }
+
+  function handleRTCMessage (data, peer) {
+    if (data.type == "msg") {
+      appendMessage(data.body.from, data.body.channel, data.body.msg);
+    }
+    else if (data.type == "join") {
+      if (channels[data.body.channel]) {
+        channels[data.body.channel][data.body.from] = new Date();
+        sendRTCData(peer, "joined", {channel: data.body.channel});
+      }
+    }
+    else if (data.type == "joined") {
+      // was trying to join this channel, and we are still in it
+      if (join_queue[data.body.from]
+       && join_queue[data.body.from].indexOf(data.body.channel) !== -1
+       && channels[data.body.channel])
+      {
+        delete join_queue[peer];
+        channels[data.body.channel][data.body.from] = new Date();
+      }
+    }
+    else if (data.type == "part") {
+      $('.messages').find('tr[data-user="'+data.body.client+'"]').addClass("disconnected");
+      delete channels[data.body.channel][data.body.from];
+    }
+  }
 
   function joinChannel(e) {
     var chan = $('#channel').val();
     $('#channel,#join').prop('disabled', 'disabled');
     $('#start').hide();
 
-    ws.send(JSON.stringify({
+    sendWSData({
       action: "join",
       channel: chan
-    }));
+    });
   }
 
   function handleSignal(ws, from, signal) {
     if (signal.type == "offer") {
       setRemote(from, signal);
       createAnswer(from, function(desc) {
-        ws.send(JSON.stringify({
+        sendWSData({
           id: from,
           action: "signal",
           sig: desc
-        }));
+        });
       });
     }
     else if (signal.type == "answer") {
@@ -281,7 +355,6 @@ $(document).ready(function() {
     else if (signal.type == "candidate") {
       addIceCandidate(from, signal.candidate);
     }
-
   }
 
   function createOffer(id, success) {
@@ -310,9 +383,9 @@ $(document).ready(function() {
   }
 
   function focusChannel(id) {
-    channels.find('.channel.active').removeClass('active');
+    channels_elem.find('.channel.active').removeClass('active');
     nav.find('li.active').removeClass('active');
-    channels.find('.channel[data-chan="'+id+'"]').addClass('active');
+    channels_elem.find('.channel[data-chan="'+id+'"]').addClass('active');
     nav.find('li[data-chan="'+id+'"]').addClass('active');
   }
 
@@ -327,7 +400,7 @@ $(document).ready(function() {
       cellpadding: 0,
       border: 0
     }));
-    channels.append(elem);
+    channels_elem.append(elem);
 
     var a = $('<a/>', {href: '#'}).text(name);
     var li = $('<li/>', {

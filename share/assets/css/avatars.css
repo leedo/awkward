@@ -47,7 +47,7 @@ body {
   position: fixed;
   bottom: 0px;
   left: 0px;
-  right: 180px;
+  right: 150px;
   padding: 2px;
   background: #eee;
   border-top: 1px solid #ccc;
@@ -62,16 +62,23 @@ body {
 .channel.active {
   display: block;
 }
-#nav {
+#right-gutter {
   position: absolute;
   top: 0px;
   right: 0px;
   bottom: 0px;
-  width: 180px;
+  width: 150px;
   padding: 10px;
   border-left: 1px solid #bbb;
   background: #eee;
-  box-shadow: inset 3px 0 3px rgba(0,0,0,0.2);
+}
+#self-stream {
+  width: 150px;
+  height: 84px;
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  -webkit-filter: grayscale(100%);
 }
 #channels {
   margin-right: 180px;

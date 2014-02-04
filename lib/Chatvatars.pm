@@ -6,7 +6,6 @@ use Chatvatar::Channel;
 my %ACTIONS = (
   "join"   => "join_channel",
   "signal" => "signal_client",
-  "saymsg" => "saymsg_channel",
 );
 
 sub new {
@@ -102,27 +101,6 @@ sub join_channel {
       members => [grep {$_ ne $client->id} $channel->members],
     }
   );
-}
-
-sub saymsg_channel {
-  my ($self, $client, $req) = @_;
-  
-  for (qw{channel msg}) {
-    return $client->send_error("must specify a $_")
-      unless defined $req->{$_};
-  }
-
-  if (my $channel = $self->find_channel($req->{channel})) {
-    for my $dest ($self->channel_members($channel)) {
-      $dest->send_message(
-        "showmsg" => {
-          from => $client->id,
-          msg  => $req->{msg},
-          channel => $channel->id,
-        }
-      );
-    }
-  }
 }
 
 sub channel_members {

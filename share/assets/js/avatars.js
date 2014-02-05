@@ -84,6 +84,20 @@ $(document).ready(function() {
     });
   }
 
+  function maybeScroll(cb) {
+    var outer_height = $(document).height()
+      , inner_height = window.innerHeight
+      , scroll = inner_height + $(document).scrollTop() >= outer_height;
+
+    var do_scroll = function() {
+      $(document).scrollTop($(document).height());
+    };
+
+    cb(scroll ? do_scroll : false);
+
+    do_scroll();
+  }
+
   function appendMessage(user, chan, message) {
     var messages = channels_elem.find('.channel[data-chan="'+chan+'"] .messages')
       , last_row = messages.find("tr:last-child")
@@ -91,14 +105,10 @@ $(document).ready(function() {
       , consecutive = last_user == user
       , stream = null;
 
-    var outer_height = $(document).height()
-      , inner_height = window.innerHeight
-      , scroll = inner_height + $(document).scrollTop() >= outer_height;
-
     if (consecutive) {
-      last_row.find(".body").append("<br>").append($('<span/>').text(message));
-      if (scroll)
-        $(document).scrollTop($(document).height());
+      maybeScroll(function() {
+        last_row.find(".body").append("<br>").append($('<span/>').text(message));
+      });
       return;
     }
 
@@ -127,24 +137,24 @@ $(document).ready(function() {
         replaceVideoWithStill(video);
       }, 3000);
 
-      if (scroll) {
-        video.on("loadeddata", function() {
-          setTimeout(function() {
-            $(document).scrollTop($(document).height());
-          }, 10);
-        });
-      }
+      maybeScroll(function(scroll) {
+        if (scroll) {
+          video.on("loadeddata", function() {
+            setTimeout(scroll, 10);
+          });
+        }
+        video.attr('src', URL.createObjectURL(stream));
+        nick.append(video);
+      });
 
-      video.attr('src', URL.createObjectURL(stream));
-      nick.append(video);
     }
 
     new_row.prepend(nick);
     new_row.append($('<td/>',{'class':"body"}).text(message));
 
-    messages.append(new_row);
-    if (scroll)
-      $(document).scrollTop($(document).height());
+    maybeScroll(function() {
+      messages.append(new_row);
+    });
   }
 
   function replaceVideoWithStill(video) {

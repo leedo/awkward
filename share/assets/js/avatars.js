@@ -70,7 +70,10 @@ $(document).ready(function() {
   function recordVideo(video, cb) {
     var v = video.get(0)
       , w = video.width()
-      , h = video.height()
+      , h = video.height();
+
+    var progress = $('<progress/>', {value:0,max:100});
+    video.after(progress);
 
     var c = document.createElement('canvas');
     c.width = w;
@@ -79,15 +82,19 @@ $(document).ready(function() {
 
     var frames = [];
     var frame = function(count) {
+      progress.attr('value', (10 - count)*10);
       ctx.drawImage(v, 0, 0, w, h);
       frames.push(c.toDataURL("image/jpeg"));
-      if (count > 0)
-        setTimeout(frame, 200, count - 1);
-      else
+      if (count > 0) {
+        setTimeout(frame, 100, count - 1);
+      }
+      else {
         cb(frames);
+        progress.fadeOut(1000, function() {progress.remove()});
+      }
     };
 
-    frame(15);
+    frame(10);
   }
 
   function appendEvent(chan, message) {
@@ -95,7 +102,9 @@ $(document).ready(function() {
       , tr = $('<tr/>', {'class':'event'})
       , td = $('<td/>', {'colspan':'2'}).text(message);
 
-    messages.append(tr.append(td));
+    maybeScroll(function() {
+      messages.append(tr.append(td));
+    });
   }
 
   function start() {
@@ -177,28 +186,36 @@ $(document).ready(function() {
 
   function recordAndReplace(video) {
     recordVideo(video, function(frames) {
-      var i = 0, interval;
+      var i = frames.length - 1
+        , fwd = true
+        , playing = true
+        , interval;
+
       var img = $('<img/>', {
         width: video.width(),
         height: video.height()
       });
 
       var stop = function() {
+        playing = false;
         clearInterval(interval);
         i = 0;
       };
 
       var start = function() {
+        playing = true;
         interval = setInterval(function() {
-          img.attr('src', frames[++i]);
-          if (i >= frames.length) stop();
-        }, 200);
+          fwd ? i++ : i--;
+          img.attr('src', frames[i]);
+          if (i >= frames.length || i <= 0)
+            fwd = !fwd;
+        }, 100);
       };
 
-      img.on("mouseenter", start);
-      img.on("mouseleave", stop);
+      img.on("click", function() {playing ? stop() : start()});
       img.attr('src', frames[i]);
       video.replaceWith(img);
+
       start();
     });
   }
@@ -326,6 +343,7 @@ $(document).ready(function() {
 
       // setup new channel
       channels[data.body.channel_id] = {};
+      appendEvent(data.body.channel_id, "joined "+data.body.channel_name);
 
       $(data.body.members).each(function(i, member) {
         // setup connection and queue join for new users

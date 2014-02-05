@@ -6,7 +6,26 @@ body {
   width: 100px;
   padding: 0;
   background: #eee;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid #eee;
+  position: relative;
+}
+.messages td.nick progress {
+  height: 3px;
+  display: block;
+  border: none;
+  width: 150px;
+  z-index: 9;
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+  background: transparent;
+  color: rgba(255,255,255,0.75);
+}
+.messages td.nick progress::-webkit-progress-value {
+  background: rgba(255,255,255,0.75);
+}
+.messages td.nick progress::-webkit-progress-bar {
+  background: transparent;
 }
 .messages td.body {
   position: relative;
@@ -60,7 +79,7 @@ body {
   display: block;
 }
 #right-gutter {
-  position: absolute;
+  position: fixed;
   top: 0px;
   right: 0px;
   bottom: 0px;

@@ -425,6 +425,7 @@ $(document).ready(function() {
     nav.find('li.active').removeClass('active');
     channels_elem.find('.channel[data-chan="'+id+'"]').addClass('active');
     nav.find('li[data-chan="'+id+'"]').addClass('active');
+    input.focus();
   }
 
   function renderChannel(name, id) {

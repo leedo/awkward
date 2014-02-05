@@ -70,7 +70,7 @@ body {
 #self-stream {
   width: 150px;
   height: 84px;
-  position: absolute;
+  position: fixed;
   bottom: 0px;
   right: 0px;
   -webkit-filter: grayscale(100%);
@@ -89,6 +89,7 @@ body {
 }
 #nav {
   margin-top: 10px;
+  padding-bottom: 94px;
 }
 #nav > li > a {
   padding: 3px 10px;

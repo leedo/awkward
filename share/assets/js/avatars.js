@@ -23,7 +23,6 @@ $(document).ready(function() {
       own_stream = s;
       $('#channel').removeAttr('disabled');
       $('#channel').focus();
-      $('#self-stream').attr('src', URL.createObjectURL(s));
       start();
     },
     function(e) {
@@ -67,6 +66,29 @@ $(document).ready(function() {
       input.val('');
     }
   });
+
+  function recordVideo(video, cb) {
+    var v = video.get(0)
+      , w = video.width()
+      , h = video.height()
+
+    var c = document.createElement('canvas');
+    c.width = w;
+    c.height = h;
+    var ctx = c.getContext('2d');
+
+    var frames = [];
+    var frame = function(count) {
+      ctx.drawImage(v, 0, 0, w, h);
+      frames.push(c.toDataURL("image/jpeg"));
+      if (count > 0)
+        setTimeout(frame, 200, count - 1);
+      else
+        cb(frames);
+    };
+
+    frame(15);
+  }
 
   function appendEvent(chan, message) {
     var messages = channels_elem.find('.channel[data-chan="'+chan+'"] .messages')
@@ -134,23 +156,15 @@ $(document).ready(function() {
 
     if (stream) {
       maybeScroll(function(scroll) {
-        var video = $('<video/>', {
-          autoplay: "autoplay",
-          muted: "muted",
-          'class': "chatvatar"
-        });
-
-        if (scroll) {
-          video.on("loadeddata", function() {
-            setTimeout(scroll, 10);
-          });
-        }
-
+        var video = $('<video/>',{autoplay: "autoplay", muted: "muted"});
         video.attr('src', URL.createObjectURL(stream));
         nick.append(video);
-        setTimeout(replaceVideoWithStill, 3000, video);
-      });
 
+        video.on("loadeddata", function() {
+          recordAndReplace(video);
+          if (scroll) setTimeout(scroll, 1);
+        });
+      });
     }
 
     new_row.prepend(nick);
@@ -161,26 +175,31 @@ $(document).ready(function() {
     });
   }
 
-  function replaceVideoWithStill(video) {
-    var w = video.width()
-      , h = video.height()
-      , v = video.get(0);
+  function recordAndReplace(video) {
+    recordVideo(video, function(frames) {
+      var i = 0, interval;
+      var img = $('<img/>', {
+        width: video.width(),
+        height: video.height()
+      });
 
-    var c = document.createElement('canvas');
-    c.width = w;
-    c.height = h;
-    var ctx = c.getContext('2d');
-    ctx.drawImage(v, 0, 0, w, h);
+      var stop = function() {
+        clearInterval(interval);
+        i = 0;
+      };
 
-    var img = $('<img/>', {
-      width: w,
-      height: h,
-      src: c.toDataURL("image/jpeg"),
-      'class': 'chatvatar'
-    });
+      var start = function() {
+        interval = setInterval(function() {
+          img.attr('src', frames[++i]);
+          if (i >= frames.length) stop();
+        }, 200);
+      };
 
-    img.on("load", function() {
-      video.replaceWith(this);
+      img.on("mouseenter", start);
+      img.on("mouseleave", stop);
+      img.attr('src', frames[i]);
+      video.replaceWith(img);
+      start();
     });
   }
 

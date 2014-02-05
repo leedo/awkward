@@ -16,13 +16,15 @@ body {
 .messages td {
   vertical-align: top;
 }
-.chatvatar {
+.messages td.nick video,
+.messages td.nick img {
   width: 150px;
   height: auto;
   margin: 0;
   display: block;
 }
-.messages tr.disconnected .chatvatar {
+.messages tr.disconnected td.nick video,
+.messages tr.disconnected td.nick img {
   -webkit-filter: grayscale(100%);
 }
 .messages {
@@ -67,14 +69,6 @@ body {
   border-left: 1px solid #bbb;
   background: #eee;
 }
-#self-stream {
-  width: 150px;
-  height: 84px;
-  position: fixed;
-  bottom: 0px;
-  right: 0px;
-  -webkit-filter: grayscale(100%);
-}
 
 .messages tr:not(.event) + tr.event td {
   border-top: 1px solid #fff;
@@ -89,7 +83,6 @@ body {
 }
 #nav {
   margin-top: 10px;
-  padding-bottom: 94px;
 }
 #nav > li > a {
   padding: 3px 10px;

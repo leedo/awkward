@@ -24,10 +24,8 @@ builder {
     my $id = Awkward::UUID->from_env(shift);
     return [
       200,
-      [
-        "Content-Type", "text/javascript",
-        "Set-Cookie", "awkward_id=$id"
-      ],
+      ["Content-Type", "text/javascript",
+       "Set-Cookie", "awkward_id=$id"],
       [encode_json {success => 1, id => $id->as_string}]
     ];
   };

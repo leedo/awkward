@@ -13,25 +13,45 @@ sub new {
   my $class = shift;
   bless {
     clients => {},
+    reconnects => {},
     redis => AnyEvent::Redis->new,
   }, $class;
 }
 
 sub new_client {
   my ($self, $conn, $id) = @_;
-  $self->{clients}{$id} = Awkward::Client->new($conn, $id);
+  my $client = Awkward::Client->new($conn, $id);
+  $self->{clients}{$id} = $client;
+
+  # stop timer
+  delete $self->{reconnects}{$id};
+
+  # rejoin channels
+  $self->{redis}->smembers($id, sub {
+    $self->join_channel($client, {channel => $_}) for @{$_[0]};
+  });
+
+  return $client;
 }
 
 sub remove_client {
   my ($self, $client) = @_;
   my $id = $client->id;
   delete $self->{clients}{$id};
+
+  # remove from channels
   $self->{redis}->smembers($id, sub {
     my $channels = shift;
     for my $chan (@$channels) {
-      $self->{redis}->srem($chan, $id, sub {});
+      $self->{redis}->srem(channel_key($chan), $id, sub {});
     }
   });
+
+  # forget what channels this user was in after 3 minutes
+  $self->{reconnects}{$id} = AE::timer 60 * 3, 0, sub {
+    delete $self->{reconnects}{$id};
+    $self->{redis}->del($id);
+  };
 }
 
 sub handle_req {
@@ -45,9 +65,7 @@ sub handle_req {
   $client->send(error => "unknown action: " . $req->{action});
 }
 
-sub channel_key {
-  "chan-" . sha1_hex $_[0];
-}
+sub channel_key { "chan-" . sha1_hex $_[0] }
 
 sub join_channel {
   my ($self, $client, $req) = @_;
@@ -60,7 +78,7 @@ sub join_channel {
   my @members;
 
   $self->{redis}->multi;
-  $self->{redis}->sadd($client->id, $chan_id, sub {});
+  $self->{redis}->sadd($client->id, $req->{channel}, sub {});
   $self->{redis}->sadd($chan_id, $client->id, sub {});
   $self->{redis}->set("$chan_id-name", $req->{channel}, sub {});
   $self->{redis}->smembers($chan_id, sub {

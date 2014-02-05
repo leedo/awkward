@@ -180,7 +180,7 @@ $(document).ready(function() {
   }
 
   function getClient(peer) {
-    if (clients[peer]) {
+    if (clients[peer] && clients[peer] != null) {
       return clients[peer]['client'];
     }
 
@@ -221,7 +221,8 @@ $(document).ready(function() {
     };
 
     client.onaddstream = function(event) {
-      clients[peer]['stream'] = event.stream;
+      if (event && event.stream && clients[peer])
+        clients[peer]['stream'] = event.stream;
     };
 
     client.oniceconnectionstatechange = function(event) {
@@ -243,7 +244,15 @@ $(document).ready(function() {
 
   function removePeer(id) {
     $('.messages').find('tr[data-user="'+id+'"]').addClass("disconnected");
+    clients[id]['client'].oniceconnectionstatechange = null;
+    clients[id]['client'].onaddstream = null;
+    clients[id]['data'].onclose = null;
+    clients[id]['data'].onmessage = null;
+    clients[id]['data'].close();
+    clients[id]['client'].close();
+    clients[id] = null;
     delete clients[id];
+
     $.each(channels, function(chan, users) {
       if (users[id])
         delete channels[chan][id];
@@ -362,6 +371,8 @@ $(document).ready(function() {
 
   function handleSignal(ws, from, signal) {
     if (signal.type == "offer") {
+      if (clients[from])
+        removePeer(from);
       setRemote(from, signal);
       createAnswer(from, function(desc) {
         sendWSData({

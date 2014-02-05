@@ -4,7 +4,7 @@ $(document).ready(function() {
     , join_queue = []
     , own_id = null
     , own_stream = null
-    , ws = openWebsocket()
+    , ws = null
     , channels_elem = $('#channels')
     , nav = $('#nav')
     , input = $('#input-wrap input');
@@ -24,6 +24,7 @@ $(document).ready(function() {
       $('#channel,#join').removeAttr('disabled');
       $('#channel').focus();
       $('#self-stream').attr('src', URL.createObjectURL(s));
+      start();
     },
     function(e) {
       console.log("error getting video stream: " + e);
@@ -67,6 +68,20 @@ $(document).ready(function() {
       , td = $('<td/>', {'colspan':'2'}).text(message);
 
       messages.append(tr.append(td));
+  }
+
+  function start() {
+    $.ajax({
+      url: "/identify",
+      type: "GET",
+      dataType: "json",
+      success: function(res) {
+        if (res.success) {
+          own_id = res.id;
+          ws = openWebsocket();
+        }
+      }
+    });
   }
 
   function appendMessage(user, chan, message) {
@@ -240,7 +255,7 @@ $(document).ready(function() {
     var ws_url = [
       (window.location.protocol == "http:" ? "ws:" : "wss"), "//",
       window.location.hostname, ":",
-      window.location.port, "/websocket"
+      window.location.port, "/websocket/" + own_id
     ].join("");
 
     var ws = new WebSocket(ws_url);
@@ -260,22 +275,19 @@ $(document).ready(function() {
   }
 
   function handleWSMessage (data) {
-    if (data.type == "setup") {
-      own_id = data.body.id;
-    }
-    else if (data.type == "signal") {
+    if (data.type == "signal") {
       handleSignal(ws, data.body.from, data.body.data);
     }
     else if (data.type == "join") {
-      renderChannel(data.body.name, data.body.id);
+      renderChannel(data.body.channel_name, data.body.channel_id);
 
       // setup new channel
-      channels[data.body.id] = {};
+      channels[data.body.channel_id] = {};
 
       $(data.body.members).each(function(i, member) {
         // setup connection and queue join for new users
         if (!clients[member]) {
-          queueJoin(member, data.body.id);
+          queueJoin(member, data.body.channel_id);
           createOffer(member, function(desc) {
             sendWSData({
               id: member,
@@ -287,7 +299,7 @@ $(document).ready(function() {
         // immediately send join to existing peer
         else {
           sendRTCData(member, "join", {
-            channel: data.body.id,
+            channel: data.body.channel_id,
             msg: msg
           });
         }
@@ -341,7 +353,6 @@ $(document).ready(function() {
   function joinChannel(e) {
     var chan = $('#channel').val();
     $('#channel,#join').prop('disabled', 'disabled');
-    $('#start').hide();
 
     sendWSData({
       action: "join",
@@ -401,6 +412,7 @@ $(document).ready(function() {
   }
 
   function renderChannel(name, id) {
+    $('#start').hide();
     var elem = $('<div/>', {
       'data-chan': id,
       'class': 'channel active'

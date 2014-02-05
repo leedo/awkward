@@ -21,7 +21,7 @@ $(document).ready(function() {
     },
     function(s) {
       own_stream = s;
-      $('#channel,#join').removeAttr('disabled');
+      $('#channel').removeAttr('disabled');
       $('#channel').focus();
       $('#self-stream').attr('src', URL.createObjectURL(s));
       start();
@@ -56,10 +56,15 @@ $(document).ready(function() {
     }
   });
 
-  $("#join").on("click", joinChannel);
   $("#channel").on("keypress", function(e) {
-    if (e.charCode == 13)
-      joinChannel(e);
+    if (e.charCode == 13) {
+      var input = $(this);
+      sendWSData({
+        action: "join",
+        channel: chan
+      });
+      input.val('');
+    }
   });
 
   function appendEvent(chan, message) {
@@ -127,24 +132,22 @@ $(document).ready(function() {
     }
 
     if (stream) {
-      var video = $('<video/>', {
-        autoplay: "autoplay",
-        muted: "muted",
-        'class': "chatvatar"
-      });
-
-      setTimeout(function() {
-        replaceVideoWithStill(video);
-      }, 3000);
-
       maybeScroll(function(scroll) {
+        var video = $('<video/>', {
+          autoplay: "autoplay",
+          muted: "muted",
+          'class': "chatvatar"
+        });
+
         if (scroll) {
           video.on("loadeddata", function() {
             setTimeout(scroll, 10);
           });
         }
+
         video.attr('src', URL.createObjectURL(stream));
         nick.append(video);
+        setTimeout(replaceVideoWithStill, 3000, video);
       });
 
     }
@@ -369,16 +372,6 @@ $(document).ready(function() {
     }
   }
 
-  function joinChannel(e) {
-    var chan = $('#channel').val();
-    $('#channel,#join').prop('disabled', 'disabled');
-
-    sendWSData({
-      action: "join",
-      channel: chan
-    });
-  }
-
   function handleSignal(ws, from, signal) {
     if (signal.type == "offer") {
       if (clients[from])
@@ -436,7 +429,7 @@ $(document).ready(function() {
     $('#start').hide();
     var elem = $('<div/>', {
       'data-chan': id,
-      'class': 'channel active'
+      'class': 'channel'
     });
     elem.append($('<table/>', {
       'class': 'messages',
@@ -447,10 +440,9 @@ $(document).ready(function() {
     channels_elem.append(elem);
 
     var a = $('<a/>', {href: '#'}).text(name);
-    var li = $('<li/>', {
-      'class': 'active',
-      'data-chan': id
-    }).html(a);
+    var li = $('<li/>', {'data-chan': id}).html(a);
     nav.append(li);
+
+    focusChannel(id);
   }
 });

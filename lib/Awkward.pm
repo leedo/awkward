@@ -70,17 +70,12 @@ sub join_channel {
   }
 
   my $chan_id = channel_key $req->{channel};
-  my @members;
 
-  $self->{redis}->multi;
   $self->{redis}->sadd($client->id, $req->{channel}, sub {});
   $self->{redis}->sadd($chan_id, $client->id, sub {});
   $self->{redis}->set("$chan_id-name", $req->{channel}, sub {});
   $self->{redis}->smembers($chan_id, sub {
-    @members = grep {$client->id ne $_} @{$_[0]};
-  });
-
-  $self->{redis}->exec(sub {
+    my @members = grep {$client->id ne $_} @{$_[0]};
     $client->send(join => {
       channel_id => $chan_id,
       channel_name => $req->{channel},

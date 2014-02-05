@@ -1,4 +1,6 @@
 requires "Twiggy";
 requires "JSON::XS";
 requires "Data::GUID";
-requires "git://github.com/leedo/Plack-App-WebSocket.git";
+requires "Plack::App::WebSocket" => "0.03";
+requires "Digest::SHA1";
+requires "AnyEvent::Redis";

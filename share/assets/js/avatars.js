@@ -44,6 +44,7 @@ $(document).ready(function() {
   input.on("keypress", function(event) {
     if (event.charCode == 13) {
       var chan_id = channels_elem.find('.active').attr('data-chan');
+      if (!channels[chan_id]) return;
       var msg = input.val();
       appendMessage(own_id, chan_id, msg);
       $.each(channels[chan_id], function(member, time) {
@@ -61,7 +62,7 @@ $(document).ready(function() {
       var input = $(this);
       sendWSData({
         action: "join",
-        channel: chan
+        channel: input.val()
       });
       input.val('');
     }
@@ -72,7 +73,7 @@ $(document).ready(function() {
       , tr = $('<tr/>', {'class':'event'})
       , td = $('<td/>', {'colspan':'2'}).text(message);
 
-      messages.append(tr.append(td));
+    messages.append(tr.append(td));
   }
 
   function start() {
@@ -267,9 +268,10 @@ $(document).ready(function() {
     delete clients[id];
 
     $.each(channels, function(chan, users) {
-      if (users[id])
+      if (users[id]) {
         delete channels[chan][id];
         appendEvent(chan, "someone disconnected");
+      }
     });
   }
 

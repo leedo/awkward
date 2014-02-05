@@ -13,7 +13,6 @@ sub new {
   my $class = shift;
   bless {
     clients => {},
-    reconnects => {},
     redis => AnyEvent::Redis->new,
   }, $class;
 }
@@ -23,8 +22,8 @@ sub new_client {
   my $client = Awkward::Client->new($conn, $id);
   $self->{clients}{$id} = $client;
 
-  # stop timer
-  delete $self->{reconnects}{$id};
+  # stop expiration
+  $self->{redis}->persist($id);
 
   # rejoin channels
   $self->{redis}->smembers($id, sub {
@@ -47,11 +46,7 @@ sub remove_client {
     }
   });
 
-  # forget what channels this user was in after 3 minutes
-  $self->{reconnects}{$id} = AE::timer 60 * 3, 0, sub {
-    delete $self->{reconnects}{$id};
-    $self->{redis}->del($id);
-  };
+  $self->{redis}->expire($id, 60 * 3, sub {});
 }
 
 sub handle_req {

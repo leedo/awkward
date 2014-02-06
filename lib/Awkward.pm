@@ -2,11 +2,12 @@ package Awkward;
 
 use Awkward::Client;
 use AnyEvent::Redis;
+use JSON::XS;
 use Digest::SHA1 qw{sha1_hex};
 
 my %ACTIONS = (
   "join"   => "join_channel",
-  "signal" => "signal_client",
+  "msg"    => "msg_channel",
 );
 
 sub new {
@@ -16,6 +17,8 @@ sub new {
     redis => AnyEvent::Redis->new,
   }, $class;
 }
+
+sub channel_key { "chan-" . sha1_hex $_[0] }
 
 sub new_client {
   my ($self, $conn, $id) = @_;
@@ -42,7 +45,13 @@ sub remove_client {
   $self->{redis}->smembers($id, sub {
     my $channels = shift;
     for my $chan (@$channels) {
-      $self->{redis}->srem(channel_key($chan), $id, sub {});
+      my $key = channel_key $chan;
+      $self->{redis}->srem($key, $id, sub {});
+      $self->{redis}->smembers($key, sub {
+        my $members = shift;
+        $_->send(part => {client => $id, channel => $key})
+          for grep {$_} map {$self->{clients}{$_}} @$members;
+      });
     }
   });
 
@@ -60,8 +69,6 @@ sub handle_req {
   $client->send(error => "unknown action: " . $req->{action});
 }
 
-sub channel_key { "chan-" . sha1_hex $_[0] }
-
 sub join_channel {
   my ($self, $client, $req) = @_;
 
@@ -74,35 +81,45 @@ sub join_channel {
   $self->{redis}->sadd($client->id, $req->{channel}, sub {});
   $self->{redis}->sadd($chan_id, $client->id, sub {});
   $self->{redis}->set("$chan_id-name", $req->{channel}, sub {});
+
+  $client->send(joined => {
+    channel_id => $chan_id,
+    channel_name => $req->{channel},
+  });
+
   $self->{redis}->smembers($chan_id, sub {
-    my @members = grep {$client->id ne $_} @{$_[0]};
-    $client->send(join => {
-      channel_id => $chan_id,
-      channel_name => $req->{channel},
-      members => \@members,
-    });
+    for (@{$_[0]}) {
+      my $client = $self->{clients}{$_};
+      $client->send(join => {
+        channel => $chan_id,
+      });
+    }
   });
 }
 
-sub signal_client {
-  my ($self, $client, $req) = @_;
+sub msg_channel {
+  my ($self, $req) = @_;
 
-  unless (defined $req->{id}) {
-    return $client->send(error => "must specify a client id");
+  my $p = $req->parameters;
+  for (qw{channel from msg}) {
+    die "missing $_" unless defined $p->{$_};
   }
 
-  my $id = $req->{id};
-
-  if (my $dest = $self->{clients}{$id}) {
-    return $dest->send(
-      signal => {
-        from => $client->id,
-        data => $req->{sig},
-      }
-    );
+  my @frames = $p->get_all("frames[]");
+  if (@frames) {
+    $self->{redis}->set($p->{from} . "-image", encode_json \@frames);
   }
 
-  $client->send(error => "unknown client");
+  $self->{redis}->smembers($p->{channel}, sub {
+    for (@{$_[0]}) {
+      $self->{clients}{$_}->send(msg => {map {$_ => $p->{$_}} qw{from channel msg}});
+    }
+  });
+}
+
+sub get_image {
+  my ($self, $id, $cb) = @_;
+  $self->{redis}->get("$id-image", $cb);
 }
 
 1;

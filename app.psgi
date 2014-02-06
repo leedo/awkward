@@ -20,6 +20,25 @@ builder {
 
   mount "/" => Plack::App::File->new(file => "share/index.html")->to_app;
 
+  mount "/image" => sub {
+    my $env = shift;
+    my ($id) = $env->{PATH_INFO} =~ m{/([^/]+)};
+    return sub {
+      my $respond = shift;
+      $app->get_image($id, sub {
+        my $image = shift;
+        $respond->($image ?
+          [200, ["Content-Type", "text/javascript"], [$image]]
+          : [404, ["Content-Type", "text/plain"], ["not found"]]);
+      });
+    };
+  };
+
+  mount "/say" => sub {
+    $app->msg_channel(Plack::Request->new(shift));
+    return [200, ["Content-Type", "text/plain"], ["ok"]];
+  };
+
   mount "/identify" => sub {
     my $id = Awkward::UUID->from_env(shift);
     return [

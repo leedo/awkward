@@ -43,16 +43,26 @@ $(document).ready(function() {
 
   input.on("keypress", function(event) {
     if (event.charCode == 13) {
-      var chan_id = channels_elem.find('.active').attr('data-chan');
-      if (!channels[chan_id]) return;
-      var msg = input.val();
-      appendMessage(own_id, chan_id, msg);
-      $.each(channels[chan_id], function(member, time) {
-        sendRTCData(member, "msg", {
-          channel: chan_id,
-          msg: msg
+      var chan = channels_elem.find('.active').attr('data-chan')
+        , msg = input.val()
+        , last_row = channels_elem.find('.channel[data-chan="'+chan+'"] .messages tr:last-child');
+
+      var send = last_row.attr('data-user') == own_id ? function(cb){cb()} : recordVideo;
+
+      send(function(frames) {
+        $.ajax({
+          url: "/say",
+          type: "POST", 
+          data: {
+            channel: chan,
+            msg: msg,
+            from: own_id,
+            frames: frames
+          },
+          dataType: "json"
         });
       });
+
       input.val('');
     }
   });
@@ -70,32 +80,26 @@ $(document).ready(function() {
 
   setInterval(cycleImages, 100);
 
-  function cycleImages() {
-    $('.frames.on').each(function() {
-      var ol = $(this);
-      var li = ol.find(".visible");
-      var dir = ol.hasClass("reverse") ? ['prev', 'next'] : ['next', 'prev'];
-      for (var i=0; i < dir.length; i++) {
-        var next = li[dir[i]]("li");
-        if (next.length) {
-          next.addClass("visible");
-          li.removeClass("visible");
-          return;
-        }
-        else {
-          ol.toggleClass("reverse");
-        }
-      }
-    });
+  function recordVideo(cb) {
+    $('#recorder').show();
+    setTimeout(function() {
+      _recordVideo(function(frames) {
+        cb(frames);
+        $('#recorder').hide();
+      });
+    }, 10);
   }
 
-  function recordVideo(video, cb) {
-    var v = video.get(0)
+  function _recordVideo(cb) {
+    var recorder = $('#recorder')
+      , video = recorder.find('video')
+      , progress = recorder.find('progress')
+      , v = video.get(0)
       , w = video.width()
       , h = video.height();
 
-    var progress = $('<progress/>', {value:0,max:100});
-    video.after(progress);
+    video.attr('src', URL.createObjectURL(own_stream));
+    progress.attr('value', 0);
 
     var c = document.createElement('canvas');
     c.width = w;
@@ -111,8 +115,8 @@ $(document).ready(function() {
         setTimeout(frame, 100, count - 1);
       }
       else {
+        frames.shift();
         cb(frames);
-        progress.fadeOut(1000, function() {progress.remove()});
       }
     };
 
@@ -140,6 +144,44 @@ $(document).ready(function() {
           ws = openWebsocket();
         }
       }
+    });
+  }
+
+  function cycleImages() {
+    $('.frames.on').each(function() {
+      var ol = $(this);
+      var li = ol.find(".visible");
+      var dir = ol.hasClass("reverse") ? ['prev', 'next'] : ['next', 'prev'];
+      for (var i=0; i < dir.length; i++) {
+        var next = li[dir[i]]("li");
+        if (next.length) {
+          next.addClass("visible");
+          li.removeClass("visible");
+          return;
+        }
+        else {
+          ol.toggleClass("reverse");
+        }
+      }
+    });
+  }
+
+  function insertFrames(frames, el, cb) {
+    var ol = $('<ol/>', {'class':'frames on reverse'});
+    $(frames).each(function() {
+      var img = $('<img/>', {src: this});
+      var li = $('<li/>').append(img);
+      ol.append(li);
+    });
+
+    var last = ol.find("li:last-child");
+    var img = last.find("img");
+    last.addClass("visible");
+    el.append(ol);
+    img.on("load", function() {
+      cb();
+      ol.height(img.height());
+      ol.width(img.width());
     });
   }
 
@@ -174,149 +216,28 @@ $(document).ready(function() {
     var new_row = $('<tr/>', {
       'class': (consecutive ? "consecutive" : ""),
       'data-user': user
-    });
+    }).hide();
 
     var nick = $('<td/>', {'class': 'nick'});
 
-    if (user == own_id) {
-      stream = own_stream;
-    }
-    else if (clients[user] && clients[user]['stream']) {
-      stream = clients[user]['stream'];
-    }
-
-    if (stream) {
-      maybeScroll(function(scroll) {
-        var video = $('<video/>',{autoplay: "autoplay", muted: "muted"});
-        video.attr('src', URL.createObjectURL(stream));
-        nick.append(video);
-
-        video.on("loadeddata", function() {
-          recordAndReplace(video);
-          if (scroll) setTimeout(scroll, 1);
+    $.ajax({
+      url: "/image/" + user,
+      type: "GET",
+      dataType: "json",
+      success: function(frames) {
+        insertFrames(frames, nick, function() {
+          maybeScroll(function() {
+            new_row.show()
+          });
         });
-      });
-    }
+      }
+    });
 
     new_row.prepend(nick);
     new_row.append($('<td/>',{'class':"body"}).text(message));
 
     maybeScroll(function() {
       messages.append(new_row);
-    });
-  }
-
-  function recordAndReplace(video) {
-    recordVideo(video, function(frames) {
-      var w = video.width()
-        , h = video.height();
-
-      var ol = $('<ol/>', {'class':'frames on reverse'});
-      ol.height(h);
-      ol.width(w);
-      $(frames).each(function() {
-        var img = $('<img/>', {
-          src: this,
-          width: w,
-          height: h
-        });
-        var li = $('<li/>').append(img);
-        ol.append(li);
-      });
-
-      ol.find("li:last-child").addClass("visible");
-      video.replaceWith(ol);
-    });
-  }
-
-  function addIceCandidate(from, candidate) {
-    if (clients[from]) {
-      clients[from]['client'].addIceCandidate(new RTCIceCandidate({
-        sdpMLineIndex: candidate.sdpMLineIndex,
-        candidate: candidate.candidate
-      }));
-    }
-  }
-
-  function getClient(peer) {
-    if (clients[peer] && clients[peer] != null) {
-      return clients[peer]['client'];
-    }
-
-    var client = new RTCPeerConnection(
-      {"iceServers": [{"url": "stun:stun.l.google.com:19302"}]},
-      {"optional": [{RtpDataChannels: true}]}
-    );
-    var data = client.createDataChannel('data', {reliable: false});
-
-    client.onicecandidate = function(event) {
-      if (event.candidate) {
-        sendWSData({
-          action: "signal",
-          id: peer,
-          sig: {
-            type: "candidate",
-            candidate: event.candidate
-          }
-        });
-      }
-    };
-
-    data.onopen = function() {
-      if (join_queue[peer]) {
-        $(join_queue[peer]).each(function(i, chan){
-          sendRTCData(peer, "join", {channel: chan});
-        })
-      }
-    };
-
-    data.onclose = function() {
-      removePeer(peer);
-    };
-
-    data.onmessage = function(e) {
-      var data = JSON.parse(e.data);
-      handleRTCMessage(data, peer);
-    };
-
-    client.onaddstream = function(event) {
-      if (event && event.stream && clients[peer])
-        clients[peer]['stream'] = event.stream;
-    };
-
-    client.oniceconnectionstatechange = function(event) {
-      if (client.iceGatheringState == "complete" && client.iceConnectionState == "disconnected")
-        removePeer(peer);
-    };
-
-    if (own_stream)
-      client.addStream(own_stream);
-
-    clients[peer] = {
-      stream: null,
-      data: data,
-      client: client
-    };
-
-    return client;
-  }
-
-  function removePeer(id) {
-    $('.messages').find('tr[data-user="'+id+'"]').addClass("disconnected");
-    clients[id]['client'].oniceconnectionstatechange = null;
-    clients[id]['client'].onaddstream = null;
-    clients[id]['data'].onclose = null;
-    clients[id]['data'].onmessage = null;
-    clients[id]['data'].close();
-    clients[id]['client'].close();
-    clients[id] = null;
-    delete clients[id];
-
-    $.each(channels, function(chan, users) {
-      if (users[id]) {
-        delete channels[chan][id];
-        appendEvent(chan, "someone disconnected");
-      }
     });
   }
 
@@ -328,6 +249,10 @@ $(document).ready(function() {
     ].join("");
 
     var ws = new WebSocket(ws_url);
+
+    ws.onerror = function(e) {
+      console.log(e);
+    };
 
     ws.onmessage = function(e) {
       var data = JSON.parse(e.data);
@@ -344,126 +269,24 @@ $(document).ready(function() {
   }
 
   function handleWSMessage (data) {
-    if (data.type == "signal") {
-      handleSignal(ws, data.body.from, data.body.data);
+    console.log(data);
+    if (data.type == "joined") {
+      renderChannel(data.body.channel_name, data.body.channel_id);
     }
     else if (data.type == "join") {
-      renderChannel(data.body.channel_name, data.body.channel_id);
-
-      // setup new channel
-      channels[data.body.channel_id] = {};
-      appendEvent(data.body.channel_id, "joined "+data.body.channel_name);
-
-      $(data.body.members).each(function(i, member) {
-        // setup connection and queue join for new users
-        if (!clients[member]) {
-          queueJoin(member, data.body.channel_id);
-          createOffer(member, function(desc) {
-            sendWSData({
-              id: member,
-              action: "signal",
-              sig: desc
-            });
-          });
-        }
-        // immediately send join to existing peer
-        else {
-          sendRTCData(member, "join", {
-            channel: data.body.channel_id,
-            msg: msg
-          });
-        }
-      });
+      appendEvent(data.body.channel, "someone joined");
+    }
+    else if (data.type == "part") {
+      $('.messages').find('tr[data-user="'+data.body.client+'"]').addClass("disconnected");
+      appendEvent(data.body.channel, "someone left");
+    }
+    else if (data.type == "msg") {
+      appendMessage(data.body.from, data.body.channel, data.body.msg);
     }
   }
 
   function sendWSData (data) {
     ws.send(JSON.stringify(data));
-  }
-
-  function sendRTCData (to, type, body) {
-    var data = clients[to]['data'];
-    if (data) {
-      body.from = own_id;
-      data.send(JSON.stringify({
-        type: type,
-        body: body
-      }));
-    }
-  }
-
-  function handleRTCMessage (data, peer) {
-    if (data.type == "msg") {
-      appendMessage(data.body.from, data.body.channel, data.body.msg);
-    }
-    else if (data.type == "join") {
-      if (channels[data.body.channel]) {
-        channels[data.body.channel][data.body.from] = new Date();
-        appendEvent(data.body.channel, "someone joined");
-        sendRTCData(peer, "joined", {channel: data.body.channel});
-      }
-    }
-    else if (data.type == "joined") {
-      // was trying to join this channel, and we are still in it
-      if (join_queue[data.body.from]
-       && join_queue[data.body.from].indexOf(data.body.channel) !== -1
-       && channels[data.body.channel])
-      {
-        delete join_queue[peer];
-        channels[data.body.channel][data.body.from] = new Date();
-      }
-    }
-    else if (data.type == "part") {
-      $('.messages').find('tr[data-user="'+data.body.client+'"]').addClass("disconnected");
-      appendEvent(data.body.channel, "someone left");
-      delete channels[data.body.channel][data.body.from];
-    }
-  }
-
-  function handleSignal(ws, from, signal) {
-    if (signal.type == "offer") {
-      if (clients[from])
-        removePeer(from);
-      setRemote(from, signal);
-      createAnswer(from, function(desc) {
-        sendWSData({
-          id: from,
-          action: "signal",
-          sig: desc
-        });
-      });
-    }
-    else if (signal.type == "answer") {
-      setRemote(from, signal);
-    }
-    else if (signal.type == "candidate") {
-      addIceCandidate(from, signal.candidate);
-    }
-  }
-
-  function createOffer(id, success) {
-    var client = getClient(id);
-    client.createOffer(function(desc) {
-      client.setLocalDescription(desc);
-      success(desc);
-    }, function(e) {
-      console.log("failed to create offer: " + e);
-    });
-  }
-
-  function setRemote(from, message) {
-    var client = getClient(from);
-    client.setRemoteDescription(new RTCSessionDescription(message));
-  }
-
-  function createAnswer(from, success) {
-    var client = getClient(from);
-    client.createAnswer(function(desc) {
-      client.setLocalDescription(desc);
-      success(desc);
-    }, function(e) {
-      console.log("failed to create answer: " + e);
-    });
   }
 
   function focusChannel(id) {

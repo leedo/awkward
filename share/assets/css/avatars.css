@@ -111,3 +111,23 @@ body {
 #nav > li > a {
   padding: 3px 10px;
 }
+ol.frames li {
+  visibility: hidden;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
+ol.frames img {
+  display: block;
+}
+ol.frames li.visible {
+  visibility: visible;
+}
+ol.frames {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}

@@ -68,6 +68,27 @@ $(document).ready(function() {
     }
   });
 
+  setInterval(cycleImages, 100);
+
+  function cycleImages() {
+    $('.frames.on').each(function() {
+      var ol = $(this);
+      var li = ol.find(".visible");
+      var dir = ol.hasClass("reverse") ? ['prev', 'next'] : ['next', 'prev'];
+      for (var i=0; i < dir.length; i++) {
+        var next = li[dir[i]]("li");
+        if (next.length) {
+          next.addClass("visible");
+          li.removeClass("visible");
+          return;
+        }
+        else {
+          ol.toggleClass("reverse");
+        }
+      }
+    });
+  }
+
   function recordVideo(video, cb) {
     var v = video.get(0)
       , w = video.width()
@@ -187,45 +208,24 @@ $(document).ready(function() {
 
   function recordAndReplace(video) {
     recordVideo(video, function(frames) {
-      var i = frames.length - 1
-        , fwd = true
-        , playing = false
-        , interval;
+      var w = video.width()
+        , h = video.height();
 
-      var img = $('<img/>', {
-        width: video.width(),
-        height: video.height()
+      var ol = $('<ol/>', {'class':'frames on reverse'});
+      ol.height(h);
+      ol.width(w);
+      $(frames).each(function() {
+        var img = $('<img/>', {
+          src: this,
+          width: w,
+          height: h
+        });
+        var li = $('<li/>').append(img);
+        ol.append(li);
       });
 
-      var stop = function() {
-        if (!playing) return;
-        playing = false;
-        clearInterval(interval);
-      };
-
-      var start = function() {
-        if (playing) return;
-        playing = true;
-        interval = setInterval(function() {
-          fwd ? i++ : i--;
-          img.attr('src', frames[i]);
-          if (i >= frames.length || i <= 0)
-            fwd = !fwd;
-        }, 100);
-      };
-
-      img.attr('src', frames[i]);
-      video.replaceWith(img);
-
-      if (stop_prev) stop_prev();
-
-      stop_prev = function() {
-        img.on("mouseenter", start);
-        img.on("mouseleave", stop);
-        stop();
-      };
-
-      start();
+      ol.find("li:last-child").addClass("visible");
+      video.replaceWith(ol);
     });
   }
 

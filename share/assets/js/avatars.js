@@ -4,6 +4,7 @@ $(document).ready(function() {
     , join_queue = []
     , own_id = null
     , own_stream = null
+    , stop_prev = null
     , ws = null
     , channels_elem = $('#channels')
     , nav = $('#nav')
@@ -188,7 +189,7 @@ $(document).ready(function() {
     recordVideo(video, function(frames) {
       var i = frames.length - 1
         , fwd = true
-        , playing = true
+        , playing = false
         , interval;
 
       var img = $('<img/>', {
@@ -197,14 +198,16 @@ $(document).ready(function() {
       });
 
       var stop = function() {
+        if (!playing) return;
         playing = false;
         clearInterval(interval);
-        i = 0;
       };
 
       var start = function() {
+        if (playing) return;
         playing = true;
         interval = setInterval(function() {
+          console.log(i);
           fwd ? i++ : i--;
           img.attr('src', frames[i]);
           if (i >= frames.length || i <= 0)
@@ -212,10 +215,14 @@ $(document).ready(function() {
         }, 100);
       };
 
-      img.on("click", function() {playing ? stop() : start()});
+      img.on("mouseenter", start);
+      img.on("mouseleave", stop);
       img.attr('src', frames[i]);
       video.replaceWith(img);
 
+      if (stop_prev) stop_prev();
+
+      stop_prev = stop;
       start();
     });
   }

@@ -23,7 +23,6 @@ $(document).ready(function() {
       own_stream = s;
       $('#channel').removeAttr('disabled');
       $('#channel').focus();
-      start();
     },
     function(e) {
       console.log("error getting video stream: " + e);
@@ -42,6 +41,7 @@ $(document).ready(function() {
 
   input.on("keypress", function(event) {
     if (event.charCode == 13) {
+      console.log("what the shit");
       var chan = channels_elem.find('.active').attr('data-chan')
         , msg = input.val()
         , last_row = channels_elem.find('.channel[data-chan="'+chan+'"] .messages tr:last-child');
@@ -78,13 +78,19 @@ $(document).ready(function() {
   });
 
   setInterval(cycleImages, 100);
+  console.log("starting");
+  start(); // get ID and open WS
 
   function recordVideo(cb) {
     $('#recorder').show();
     setTimeout(function() {
       _recordVideo(function(frames) {
         cb(frames);
-        $('#recorder').hide();
+        setTimeout(function() {
+          $('#recorder').fadeOut(100, function() {
+            $('#recorder video').removeAttr('src');
+          });
+        }, 200);
       });
     }, 10);
   }
@@ -99,6 +105,7 @@ $(document).ready(function() {
     progress.attr('value', 0);
 
     video.on("loadeddata", function() {
+      video.off("loadeddata");
       var w = video.width()
         , h = video.height()
         , aspect = w / h
@@ -181,9 +188,11 @@ $(document).ready(function() {
     last.addClass("visible");
     el.append(ol);
     img.on("load", function() {
-      cb();
-      ol.height(img.height());
-      ol.width(img.width());
+      maybeScroll(function() {
+        cb();
+        ol.height(img.height());
+        ol.width(img.width());
+      });
     });
   }
 
@@ -228,9 +237,7 @@ $(document).ready(function() {
       dataType: "json",
       success: function(frames) {
         insertFrames(frames, nick, function() {
-          maybeScroll(function() {
-            new_row.show()
-          });
+          new_row.show()
         });
       }
     });

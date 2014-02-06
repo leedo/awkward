@@ -113,27 +113,29 @@ ol.frames {
 }
 #recorder {
   display: none;
-  width: 640px;
-  position: absolute;
+  width: 652px;
+  position: fixed;
   top: 50px;
   left: 50%;
-  margin-left: -320px;
+  margin-left: -336px;
   background: #fff;
-  box-shadow: 0 0 5px rgba(0,0,0,0.25);
+  border: 1px solid #eee;
+  box-shadow: 0 0 3px rgba(0,0,0,0.5);
+  padding: 5px;
 }
 #recorder video {
   width: 640px;
 }
 #recorder progress {
-  height: 10px;
+  height: 8px;
   display: block;
   border: none;
-  width: 640px;
   background: #eee;
-  color: #fff;
+  color: #428bca;
+  width: 640px;
 }
 #recorder progress::-webkit-progress-value {
-  background: #fff;
+  background: #428bca;
 }
 #recorder progress::-webkit-progress-bar {
   background: #eee;

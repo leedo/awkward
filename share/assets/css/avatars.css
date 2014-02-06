@@ -113,22 +113,22 @@ ol.frames {
 }
 #recorder {
   display: none;
-  width: 320px;
+  width: 640px;
   position: absolute;
   top: 50px;
   left: 50%;
-  margin-left: -160px;
+  margin-left: -320px;
   background: #fff;
   box-shadow: 0 0 5px rgba(0,0,0,0.25);
 }
 #recorder video {
-  width: 320px;
+  width: 640px;
 }
 #recorder progress {
   height: 10px;
   display: block;
   border: none;
-  width: 320px;
+  width: 640px;
   background: #eee;
   color: #fff;
 }

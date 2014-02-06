@@ -14,8 +14,7 @@ $(document).ready(function() {
     {
       video: {
         mandatory: {
-          maxWidth: 320,
-          maxHeight: 180
+          maxWidth: 640
         },
       },
       audio: false
@@ -94,33 +93,36 @@ $(document).ready(function() {
     var recorder = $('#recorder')
       , video = recorder.find('video')
       , progress = recorder.find('progress')
-      , v = video.get(0)
-      , w = video.width()
-      , h = video.height();
+      , v = video.get(0);
 
     video.attr('src', URL.createObjectURL(own_stream));
     progress.attr('value', 0);
 
-    var c = document.createElement('canvas');
-    c.width = w;
-    c.height = h;
-    var ctx = c.getContext('2d');
+    video.on("loadeddata", function() {
+      var w = video.width()
+        , h = video.height()
+        , aspect = w / h
+        , c = document.createElement('canvas')
+        , ctx = c.getContext('2d');
 
-    var frames = [];
-    var frame = function(count) {
-      progress.attr('value', (10 - count)*10);
-      ctx.drawImage(v, 0, 0, w, h);
-      frames.push(c.toDataURL("image/jpeg"));
-      if (count > 0) {
-        setTimeout(frame, 100, count - 1);
-      }
-      else {
-        frames.shift();
-        cb(frames);
-      }
-    };
+      c.width = 150
+      c.height = parseInt(150 / aspect);
 
-    frame(10);
+      var frames = [];
+      var frame = function(count) {
+        progress.attr('value', (10 - count)*10);
+        ctx.drawImage(v, 0, 0, c.width, c.height);
+        frames.push(c.toDataURL("image/jpeg"));
+        if (count > 0) {
+          setTimeout(frame, 100, count - 1);
+        }
+        else {
+          cb(frames);
+        }
+      };
+
+      frame(10);
+    });
   }
 
   function appendEvent(chan, message) {

@@ -207,7 +207,6 @@ $(document).ready(function() {
         if (playing) return;
         playing = true;
         interval = setInterval(function() {
-          console.log(i);
           fwd ? i++ : i--;
           img.attr('src', frames[i]);
           if (i >= frames.length || i <= 0)
@@ -215,14 +214,17 @@ $(document).ready(function() {
         }, 100);
       };
 
-      img.on("mouseenter", start);
-      img.on("mouseleave", stop);
       img.attr('src', frames[i]);
       video.replaceWith(img);
 
       if (stop_prev) stop_prev();
 
-      stop_prev = stop;
+      stop_prev = function() {
+        img.on("mouseenter", start);
+        img.on("mouseleave", stop);
+        stop();
+      };
+
       start();
     });
   }

@@ -326,10 +326,6 @@ $(document).ready(function() {
     }
   }
 
-  function sendWSData (data) {
-    console.log(ws.readyState, data);
-  }
-
   function focusChannel(id) {
     channels.find('.channel.active').removeClass('active');
     nav.find('li.active').removeClass('active');

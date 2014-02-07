@@ -1,12 +1,9 @@
 $(document).ready(function() {
-  var clients = {}
-    , channels = {}
-    , own_id = null
+  var own_id = null
     , own_stream = null
-    , ws = null
     , overlay = $('#overlay')
     , recorder = $('#recorder')
-    , channels_elem = $('#channels')
+    , channels = $('#channels')
     , nav = $('#nav')
     , input = $('#input-wrap input');
 
@@ -31,7 +28,6 @@ $(document).ready(function() {
     input.focus();
   });
 
-
   nav.on('click', 'li button', function(e) {
     e.preventDefault();
     var li = $(this).parents("li");
@@ -54,9 +50,9 @@ $(document).ready(function() {
         return;
       }
 
-      var chan = channels_elem.find('.active').attr('data-chan')
+      var chan = channels.find('.active').attr('data-chan')
         , msg = input.val()
-        , last_row = channels_elem.find('.channel[data-chan="'+chan+'"] .messages tr:last-child');
+        , last_row = channels.find('.channel[data-chan="'+chan+'"] .messages tr:last-child');
 
       var send = last_row.attr('data-user') == own_id ? function(cb){cb()} : beginRecord;
 
@@ -162,7 +158,7 @@ $(document).ready(function() {
   }
 
   function appendEvent(chan, message) {
-    var messages = channels_elem.find('.channel[data-chan="'+chan+'"] .messages')
+    var messages = channels.find('.channel[data-chan="'+chan+'"] .messages')
       , tr = $('<tr/>', {'class':'event'})
       , td = $('<td/>', {'colspan':'2'}).text(message);
 
@@ -198,7 +194,7 @@ $(document).ready(function() {
   }
 
   function appendMessage(user, chan, message) {
-    var messages = channels_elem.find('.channel[data-chan="'+chan+'"] .messages')
+    var messages = channels.find('.channel[data-chan="'+chan+'"] .messages')
       , last_row = messages.find("tr:last-child")
       , last_user = last_row.attr('data-user')
       , consecutive = last_user == user
@@ -234,6 +230,11 @@ $(document).ready(function() {
     });
   }
 
+  var defaultSendWSData = function() {
+    alert("not connected");
+  };
+  var sendWSData = defaultSendWSData;
+
   function openWebsocket() {
     var ws_url = [
       (window.location.protocol == "http:" ? "ws:" : "wss"), "//",
@@ -243,11 +244,19 @@ $(document).ready(function() {
 
     var ws = new WebSocket(ws_url);
 
-    ws.onerror = function(e) {
-      console.log(e);
+    ws.onclose = function(e) {
+      sendWSData = defaultSendWSData;
+      channels.find(".channel").remove();
+      $('#channel').attr('disabled', 'disabled');
+      input.attr('disabled', 'disabled');
+      nav.find("li").remove();
+      setTimeout(openWebsocket, 3000);
     };
 
     ws.onopen = function(e) {
+      sendWSData = function(data) {
+        ws.send(JSON.stringify(data));
+      };
       $('#channel').removeAttr('disabled');
       if (window.location.hash) {
         var channel = decodeURIComponent(window.location.hash).replace(/^#/, "");
@@ -276,16 +285,7 @@ $(document).ready(function() {
       appendEvent(data.body.channel_id, "you joined " + data.body.channel_name);
     }
     else if (data.type == "parted") {
-      var n = nav.find('li[data-chan="'+data.body.channel_id+'"]');
-
-      if (n.hasClass('active')) {
-        var next = n.siblings();
-        if (next.length)
-          focusChannel(next.first().attr('data-chan'));
-      }
-
-      $('#'+data.body.channel_id).remove();
-      n.remove();
+      removeChannel(data.body.channel_id);
     }
     else if (data.type == "join") {
       appendEvent(data.body.channel, "someone joined");
@@ -300,14 +300,14 @@ $(document).ready(function() {
   }
 
   function sendWSData (data) {
-    ws.send(JSON.stringify(data));
+    console.log(ws.readyState, data);
   }
 
   function focusChannel(id) {
-    channels_elem.find('.channel.active').removeClass('active');
+    channels.find('.channel.active').removeClass('active');
     nav.find('li.active').removeClass('active');
     nav.find('li[data-chan="'+id+'"]').addClass('active');
-    var channel = channels_elem.find('.channel[data-chan="'+id+'"]');
+    var channel = channels.find('.channel[data-chan="'+id+'"]');
     channel.addClass('active');
     window.history.replaceState({}, "", "#" +encodeURIComponent(channel.attr('data-name')));
     input.focus();
@@ -327,7 +327,7 @@ $(document).ready(function() {
       cellpadding: 0,
       border: 0
     }));
-    channels_elem.append(elem);
+    channels.append(elem);
 
     var a = $('<a/>', {href: '#'}).text(name);
     var close = $('<button/>', {
@@ -339,5 +339,18 @@ $(document).ready(function() {
     nav.append(li.append(a.prepend(close)));
 
     focusChannel(id);
+  }
+
+  function removeChannel(id) {
+    var n = nav.find('li[data-chan="'+id+'"]');
+
+    if (n.hasClass('active')) {
+      var next = n.siblings();
+      if (next.length)
+        focusChannel(next.first().attr('data-chan'));
+    }
+
+    $('#'+id).remove();
+    n.remove();
   }
 });

@@ -26,6 +26,7 @@ body {
   height: auto;
   margin: 0;
   display: block;
+  cursor: pointer;
 }
 .messages tr.disconnected td.nick img {
   -webkit-filter: grayscale(100%);
@@ -103,26 +104,6 @@ body {
 }
 #nav li:hover button.close {
   opacity: 0.8;
-}
-ol.frames li {
-  visibility: hidden;
-  margin: 0;
-  padding: 0;
-  position: absolute;
-  top: 0px;
-  left: 0px;
-}
-ol.frames img {
-  display: block;
-}
-ol.frames li.visible {
-  visibility: visible;
-}
-ol.frames {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  position: relative;
 }
 #recorder {
   display: none;

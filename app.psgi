@@ -26,7 +26,7 @@ builder {
       my $respond = shift;
       $app->get_image($id, sub {
         if ($_[0]) {
-          $respond->([200, ["Content-Type", "image/gif"], [$_[0]]]);
+          $respond->([200, ["Content-Type", "text/plain"], [$_[0]]]);
         }
         else {
           $respond->([404, ["Content-Type", "text/plain"], ["not found"]]);

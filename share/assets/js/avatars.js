@@ -1,12 +1,10 @@
 $(document).ready(function() {
-  var clients = {}
-    , channels = {}
-    , own_id = null
+  var own_id = null
     , own_stream = null
     , ws = null
     , overlay = $('#overlay')
     , recorder = $('#recorder')
-    , channels_elem = $('#channels')
+    , channels = $('#channels')
     , nav = $('#nav')
     , input = $('#input-wrap input');
 
@@ -54,9 +52,9 @@ $(document).ready(function() {
         return;
       }
 
-      var chan = channels_elem.find('.active').attr('data-chan')
+      var chan = channels.find('.active').attr('data-chan')
         , msg = input.val()
-        , last_row = channels_elem.find('.channel[data-chan="'+chan+'"] .messages tr:last-child');
+        , last_row = channels.find('.channel[data-chan="'+chan+'"] .messages tr:last-child');
 
       var send = last_row.attr('data-user') == own_id ? function(cb){cb()} : beginRecord;
 
@@ -87,6 +85,23 @@ $(document).ready(function() {
       });
       input.val('');
     }
+  });
+
+  channels.on("click", ".nick img", function() {
+    var reader = new FileReader();
+    var b64 = $(this).attr('src').replace(/^data:image\/gif;base64,/, "");
+    var arr = base64DecToArr(b64);
+    var blob = new Blob([arr], {type: "image/gif"});
+    var fd = new FormData();
+    fd.append("image", blob);
+    fd.append("key", "f1f60f1650a07bfe5f402f35205dffd4");
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "http://api.imgur.com/2/upload.json");
+    xhr.onload = function() {
+      var res = JSON.parse(xhr.responseText);
+      alert(res.upload.links.original);
+    };
+    xhr.send(fd);
   });
 
   console.log("starting");
@@ -162,7 +177,7 @@ $(document).ready(function() {
   }
 
   function appendEvent(chan, message) {
-    var messages = channels_elem.find('.channel[data-chan="'+chan+'"] .messages')
+    var messages = channels.find('.channel[data-chan="'+chan+'"] .messages')
       , tr = $('<tr/>', {'class':'event'})
       , td = $('<td/>', {'colspan':'2'}).text(message);
 
@@ -198,7 +213,7 @@ $(document).ready(function() {
   }
 
   function appendMessage(user, chan, message) {
-    var messages = channels_elem.find('.channel[data-chan="'+chan+'"] .messages')
+    var messages = channels.find('.channel[data-chan="'+chan+'"] .messages')
       , last_row = messages.find("tr:last-child")
       , last_user = last_row.attr('data-user')
       , consecutive = last_user == user
@@ -217,13 +232,21 @@ $(document).ready(function() {
     });
 
     var nick = $('<td/>', {'class': 'nick'});
-    var img = $('<img/>',{src: "/image/"+user+".gif"});
-    nick.append(img);
-
-    maybeScroll(function(scroll) {
-      img.on("load", function() {
-        if (scroll) scroll();
-      });
+    $.ajax({
+      url: "/image/"+user+".gif",
+      dataType: "text",
+      success: function(data) {
+        var img = $('<img/>',{
+          src: "data:image/gif;base64," + data,
+          title: "click for public URL"
+        });
+        maybeScroll(function(scroll) {
+          img.on("load", function() {
+            if (scroll) scroll();
+          });
+        });
+        nick.append(img);
+      }
     });
 
     new_row.prepend(nick);
@@ -304,10 +327,10 @@ $(document).ready(function() {
   }
 
   function focusChannel(id) {
-    channels_elem.find('.channel.active').removeClass('active');
+    channels.find('.channel.active').removeClass('active');
     nav.find('li.active').removeClass('active');
     nav.find('li[data-chan="'+id+'"]').addClass('active');
-    var channel = channels_elem.find('.channel[data-chan="'+id+'"]');
+    var channel = channels.find('.channel[data-chan="'+id+'"]');
     channel.addClass('active');
     window.history.replaceState({}, "", "#" +encodeURIComponent(channel.attr('data-name')));
     input.focus();
@@ -327,7 +350,7 @@ $(document).ready(function() {
       cellpadding: 0,
       border: 0
     }));
-    channels_elem.append(elem);
+    channels.append(elem);
 
     var a = $('<a/>', {href: '#'}).text(name);
     var close = $('<button/>', {

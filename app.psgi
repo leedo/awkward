@@ -22,31 +22,16 @@ builder {
 
   mount "/image" => sub {
     my $env = shift;
-    my ($id, $gif) = $env->{PATH_INFO} =~ m{/([^/]+?)(\.gif)?$};
+    my ($id) = $env->{PATH_INFO} =~ m{/([^/]+?)\.gif$};
     return sub {
       my $respond = shift;
       $app->get_image($id, sub {
-        my $json = shift;
-
-            return $respond->(
-              [200, ["Content-Type", "image/gif"], [$json]]
-            );
-
-        if ($json) {
-          if ($gif) {
-            return $app->gifify($json, sub {
-              $respond->([200, ["Content-Type", "image/gif"] ,[@_]]);
-            });
-          }
-          else {
-            return $respond->(
-              [200, ["Content-Type", "text/javascript"], [$json]]
-            );
-          }
+        if ($_[0]) {
+          $respond->([200, ["Content-Type", "image/gif"], [$_[0]]]);
         }
-        $respond->(
-          [404, ["Content-Type", "text/plain"], ["not found"]]
-        );
+        else {
+          $respond->([404, ["Content-Type", "text/plain"], ["not found"]]);
+        }
       });
     };
   };

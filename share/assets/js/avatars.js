@@ -86,19 +86,21 @@ $(document).ready(function() {
   });
 
   channels.on("click", ".nick img", function() {
-    var reader = new FileReader();
-    var b64 = $(this).attr('src').replace(/^data:image\/gif;base64,/, "");
-    var arr = base64DecToArr(b64);
-    var blob = new Blob([arr], {type: "image/gif"});
-    var fd = new FormData();
+    var b64 = $(this).attr('src').replace(/^data:image\/gif;base64,/, "")
+      , arr = base64DecToArr(b64)
+      , blob = new Blob([arr], {type: "image/gif"})
+      , fd = new FormData()
+      , xhr = new XMLHttpRequest();
+
     fd.append("image", blob);
     fd.append("key", "f1f60f1650a07bfe5f402f35205dffd4");
-    var xhr = new XMLHttpRequest();
     xhr.open("POST", "http://api.imgur.com/2/upload.json");
+
     xhr.onload = function() {
       var res = JSON.parse(xhr.responseText);
       alert(res.upload.links.original);
     };
+
     xhr.send(fd);
   });
 

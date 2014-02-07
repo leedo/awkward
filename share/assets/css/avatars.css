@@ -136,15 +136,15 @@ ol.frames {
   height: 8px;
   display: block;
   border: none;
-  background: #eee;
+  background: #999;
   color: red;
   width: 640px;
 }
 #recorder progress.down {
-  color: #aaa;
+  color: #999;
 }
 #recorder progress.down::-webkit-progress-value {
-  background: #aaa;
+  background: #999;
 }
 #recorder progress::-webkit-progress-value {
   background: red;

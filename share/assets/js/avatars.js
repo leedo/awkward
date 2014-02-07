@@ -50,8 +50,12 @@ $(document).ready(function() {
   });
 
   input.on("keypress", function(e) {
-      console.log(e);
     if (e.keyCode == 13) {
+      if (!own_stream) {
+        alert("Must allow video capture");
+        return;
+      }
+
       var chan = channels_elem.find('.active').attr('data-chan')
         , msg = input.val()
         , last_row = channels_elem.find('.channel[data-chan="'+chan+'"] .messages tr:last-child');
@@ -71,6 +75,8 @@ $(document).ready(function() {
           dataType: "json"
         });
       });
+
+      input.val('');
     }
   });
 
@@ -90,17 +96,11 @@ $(document).ready(function() {
   start(); // get ID and open WS
 
   function beginRecord(cb) {
-    if (!own_stream) {
-      alert("Must allow video capture");
-      return;
-    }
-
     var video = recorder.find('video')
       , progress = recorder.find('progress')
       , flash = recorder.find('span.flash')
       , clock = recorder.find('span.countdown');
 
-    input.val('');
     progress.attr('value', 0);
     progress.addClass('down');
     recorder.removeClass("recording");
@@ -324,7 +324,6 @@ $(document).ready(function() {
   }
 
   function handleWSMessage (data) {
-    console.log(data);
     if (data.type == "joined") {
       if ($('#'+data.body.channel_id).length) return;
       renderChannel(data.body.channel_name, data.body.channel_id);

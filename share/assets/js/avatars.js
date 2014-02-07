@@ -284,7 +284,7 @@ $(document).ready(function() {
       };
       $('#channel').removeAttr('disabled');
       if (window.location.hash) {
-        var channel = decodeURIComponent(window.location.hash).replace(/^#/, "");
+        var channel = decodeURIComponent(window.location.hash).replace(/^#\/?/, "");
         sendWSData({
           action: "join",
           channel: channel
@@ -334,7 +334,7 @@ $(document).ready(function() {
     nav.find('li[data-chan="'+id+'"]').addClass('active');
     var channel = channels.find('.channel[data-chan="'+id+'"]');
     channel.addClass('active');
-    window.history.replaceState({}, "", "#" +encodeURIComponent(channel.attr('data-name')));
+    window.history.replaceState({}, "", "#/" +encodeURIComponent(channel.attr('data-name')));
     input.focus();
   }
 
@@ -377,5 +377,11 @@ $(document).ready(function() {
 
     $('#'+id).remove();
     n.remove();
+
+    if (!nav.find("li").length) {
+      input.attr('disabled', 'disabled');
+      $('#channel').focus();
+      window.history.replaceState({}, "", "/");
+    }
   }
 });

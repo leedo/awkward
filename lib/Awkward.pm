@@ -48,7 +48,7 @@ sub remove_client {
   $self->{redis}->hkeys($id, sub {
     my $channels = shift;
     for my $chan (@$channels) {
-      $self->part_channel($client, {channel => $chan});
+      $self->part_channel($client, {channel => $chan}, 1);
     }
   });
 
@@ -75,39 +75,43 @@ sub join_channel {
 
   my $chan_id = channel_key $req->{channel};
 
-  $self->{redis}->hset($client->id, $chan_id, $req->{channel}, sub {});
-  $self->{redis}->sadd($chan_id, $client->id, sub {});
-
-  $client->send(joined => {
-    channel_id => $chan_id,
-    channel_name => $req->{channel},
+  $self->{redis}->sadd($chan_id, $client->id, sub {
+    $self->broadcast($chan_id, 
+      exclude => $client->id,
+      {join => {channel => $chan_id}}
+    );
   });
 
-  $self->broadcast($chan_id, 
-    exclude => $client->id,
-    {join => {channel => $chan_id}}
-  );
+  $self->{redis}->hset($client->id, $chan_id, $req->{channel}, sub {
+    $client->send(joined => {
+      channel_id => $chan_id,
+      channel_name => $req->{channel},
+    });
+  });
 }
 
 sub part_channel {
-  my ($self, $client, $req) = @_;
+  my ($self, $client, $req, $disconnect) = @_;
 
   unless (defined $req->{channel}) {
     return $client->send(error => "must specify channel");
   }
 
-  $self->{redis}->srem($req->{channel}, $client->id);
-  $self->{redis}->hdel($client->id, $req->{channel}, sub {
-    my $name = shift;
-    $client->send(parted => {
-      channel_id => $req->{channel},
-      channel_name => $name,
+  if (!$disconnect) {
+    $self->{redis}->hdel($client->id, $req->{channel}, sub {
+      my $name = shift;
+      $client->send(parted => {
+        channel_id => $req->{channel},
+        channel_name => $name,
+      });
     });
-  });
+  }
 
-  $self->broadcast($req->{channel},
-    {part => {channel => $req->{channel}}}
-  );
+  $self->{redis}->srem($req->{channel}, $client->id, sub {
+    $self->broadcast($req->{channel},
+      {part => {channel => $req->{channel}}}
+    );
+  });
 }
 
 sub broadcast {

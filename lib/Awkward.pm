@@ -82,12 +82,12 @@ sub join_channel {
 
   $self->{redis}->sadd($client->id, $req->{channel}, sub {});
   $self->{redis}->sadd($chan_id, $client->id, sub {});
-  $self->{redis}->set("$chan_id-name", $req->{channel}, sub {});
 
   $client->send(joined => {
     channel_id => $chan_id,
     channel_name => $req->{channel},
   });
+
   $self->broadcast($chan_id, 
     exclude => $client->id,
     {join => {channel => $chan_id}}
@@ -125,7 +125,7 @@ sub msg_channel {
 
   if (@frames) {
     $self->gifify(encode_json(\@frames), sub {
-      $self->{redis}->set($p->{from} . "-gif", shift);
+      $self->{redis}->setex($p->{from} . "-gif", 60 * 5, $_[0]);
       $self->broadcast($p->{channel}, $payload);
     });
   }

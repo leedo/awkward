@@ -62,7 +62,7 @@ builder {
     },
     on_establish => sub {
       my ($conn, $env) = @_;
-      my ($id) = $env->{PATH_INFO} =~ m{/([^/]+)};
+      my ($id) = $env->{PATH_INFO} =~ m{/([^/]+)$};
       my $client = $app->new_client($conn, $id);
       $conn->on(
         message => sub {

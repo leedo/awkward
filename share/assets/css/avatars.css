@@ -91,6 +91,11 @@ body {
 #nav > li > a {
   padding: 3px 10px;
 }
+#nav li button.close {
+  float: right;
+}
+#nav li:hover button.close {
+}
 ol.frames li {
   visibility: hidden;
   margin: 0;
@@ -114,6 +119,7 @@ ol.frames {
 #recorder {
   display: none;
   width: 652px;
+  z-index: 999;
   position: fixed;
   top: 50px;
   left: 50%;
@@ -131,13 +137,49 @@ ol.frames {
   display: block;
   border: none;
   background: #eee;
-  color: #428bca;
+  color: red;
   width: 640px;
 }
+#recorder progress.down {
+  color: #aaa;
+}
+#recorder progress.down::-webkit-progress-value {
+  background: #aaa;
+}
 #recorder progress::-webkit-progress-value {
-  background: #428bca;
+  background: red;
 }
 #recorder progress::-webkit-progress-bar {
   background: #eee;
 }
-
+#recorder span.countdown {
+  position: absolute;
+  left: 0px;
+  right: 0px;
+  text-align: center;
+  font-size: 256px;
+  color: rgba(255,255,255,0.75);
+  text-shadow: 0 0 3px rgba(0,0,0,0.5);
+}
+#recorder span.flash {
+  background: #fff;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  display: none;
+}
+#recorder span.flash.on {
+  display: block;
+}
+#overlay {
+  display: none;
+  position: fixed;
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  z-index: 99;
+  background: rgba(0,0,0,0.5);
+}

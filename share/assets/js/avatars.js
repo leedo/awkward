@@ -6,6 +6,8 @@ $(document).ready(function() {
     , own_stream = null
     , stop_prev = null
     , ws = null
+    , overlay = $('#overlay')
+    , recorder = $('#recorder')
     , channels_elem = $('#channels')
     , nav = $('#nav')
     , input = $('#input-wrap input');
@@ -21,8 +23,6 @@ $(document).ready(function() {
     },
     function(s) {
       own_stream = s;
-      $('#channel').removeAttr('disabled');
-      $('#channel').focus();
     },
     function(e) {
       console.log("error getting video stream: " + e);
@@ -34,19 +34,29 @@ $(document).ready(function() {
   });
 
 
-  nav.on('click', 'li', function(e) {
+  nav.on('click', 'li button.close', function(e) {
     e.preventDefault();
-    focusChannel($(this).attr('data-chan'));
+    var li = $(this).parents("li");
+    sendWSData({
+      action: "part",
+      channel: li.find('data-chan')
+    });
   });
 
-  input.on("keypress", function(event) {
-    if (event.charCode == 13) {
-      console.log("what the shit");
+  nav.on('click', 'li a', function(e) {
+    e.preventDefault();
+    var li = $(this).parents("li");
+    focusChannel(li.attr('data-chan'));
+  });
+
+  input.on("keypress", function(e) {
+      console.log(e);
+    if (e.keyCode == 13) {
       var chan = channels_elem.find('.active').attr('data-chan')
         , msg = input.val()
         , last_row = channels_elem.find('.channel[data-chan="'+chan+'"] .messages tr:last-child');
 
-      var send = last_row.attr('data-user') == own_id ? function(cb){cb()} : recordVideo;
+      var send = last_row.attr('data-user') == own_id ? function(cb){cb()} : beginRecord;
 
       send(function(frames) {
         $.ajax({
@@ -61,13 +71,11 @@ $(document).ready(function() {
           dataType: "json"
         });
       });
-
-      input.val('');
     }
   });
 
   $("#channel").on("keypress", function(e) {
-    if (e.charCode == 13) {
+    if (e.keyCode == 13) {
       var input = $(this);
       sendWSData({
         action: "join",
@@ -81,55 +89,79 @@ $(document).ready(function() {
   console.log("starting");
   start(); // get ID and open WS
 
-  function recordVideo(cb) {
-    $('#recorder').show();
-    setTimeout(function() {
-      _recordVideo(function(frames) {
-        cb(frames);
-        setTimeout(function() {
-          $('#recorder').fadeOut(100, function() {
-            $('#recorder video').removeAttr('src');
-          });
-        }, 200);
-      });
-    }, 10);
-  }
+  function beginRecord(cb) {
+    if (!own_stream) {
+      alert("Must allow video capture");
+      return;
+    }
 
-  function _recordVideo(cb) {
-    var recorder = $('#recorder')
-      , video = recorder.find('video')
+    var video = recorder.find('video')
       , progress = recorder.find('progress')
-      , v = video.get(0);
+      , flash = recorder.find('span.flash')
+      , clock = recorder.find('span.countdown');
 
-    video.attr('src', URL.createObjectURL(own_stream));
+    input.val('');
     progress.attr('value', 0);
+    progress.addClass('down');
+    recorder.removeClass("recording");
+
+    var countdown = function(count) {
+      if (count) {
+        progress.attr('value', 100 - count * 10);
+        setTimeout(countdown, 100, count - 1);
+      }
+      else {
+        progress.attr('value', 200);
+        setTimeout(recordVideo, 150, cb);
+      }
+    };
 
     video.on("loadeddata", function() {
       video.off("loadeddata");
-      var w = video.width()
-        , h = video.height()
-        , aspect = w / h
-        , c = document.createElement('canvas')
-        , ctx = c.getContext('2d');
-
-      c.width = 150
-      c.height = parseInt(150 / aspect);
-
-      var frames = [];
-      var frame = function(count) {
-        progress.attr('value', (10 - count)*10);
-        ctx.drawImage(v, 0, 0, c.width, c.height);
-        frames.push(c.toDataURL("image/jpeg"));
-        if (count > 0) {
-          setTimeout(frame, 100, count - 1);
-        }
-        else {
-          cb(frames);
-        }
-      };
-
-      frame(10);
+      overlay.show();
+      recorder.show();
+      countdown(10);
     });
+
+    video.attr('src', URL.createObjectURL(own_stream));
+  }
+
+  function recordVideo(cb) {
+    var recorder = $('#recorder')
+      , video = recorder.find('video')
+      , progress = recorder.find('progress')
+      , v = video.get(0)
+      , w = video.width()
+      , h = video.height()
+      , aspect = w / h
+      , c = document.createElement('canvas')
+      , ctx = c.getContext('2d');
+
+    c.width = 150
+    c.height = parseInt(150 / aspect);
+    progress.removeClass('down');
+
+    var frames = [];
+    var frame = function(count) {
+      progress.attr('value', 100 - ((10 - count)*10));
+      ctx.drawImage(v, 0, 0, c.width, c.height);
+      frames.push(c.toDataURL("image/jpeg"));
+      if (count > 0) {
+        setTimeout(frame, 100, count - 1);
+      }
+      else {
+        v.pause();
+        cb(frames);
+        setTimeout(function() {
+          overlay.fadeOut(100);
+          recorder.fadeOut(100, function() {
+            video.removeAttr('src');
+          });
+        }, 200);
+      }
+    };
+
+    frame(10);
   }
 
   function appendEvent(chan, message) {
@@ -263,6 +295,20 @@ $(document).ready(function() {
       console.log(e);
     };
 
+    ws.onopen = function(e) {
+      $('#channel').removeAttr('disabled');
+      if (window.location.hash) {
+        var channel = decodeURIComponent(window.location.hash).replace(/^#/, "");
+        sendWSData({
+          action: "join",
+          channel: channel
+        });
+      }
+      else if (!$('.channel').length) {
+        $('#channel').focus();
+      }
+    };
+
     ws.onmessage = function(e) {
       var data = JSON.parse(e.data);
       handleWSMessage(data);
@@ -280,7 +326,9 @@ $(document).ready(function() {
   function handleWSMessage (data) {
     console.log(data);
     if (data.type == "joined") {
+      if ($('#'+data.body.channel_id).length) return;
       renderChannel(data.body.channel_name, data.body.channel_id);
+      appendEvent(data.body.channel_id, "you joined " + data.body.channel_name);
     }
     else if (data.type == "join") {
       appendEvent(data.body.channel, "someone joined");
@@ -301,15 +349,19 @@ $(document).ready(function() {
   function focusChannel(id) {
     channels_elem.find('.channel.active').removeClass('active');
     nav.find('li.active').removeClass('active');
-    channels_elem.find('.channel[data-chan="'+id+'"]').addClass('active');
     nav.find('li[data-chan="'+id+'"]').addClass('active');
+    var channel = channels_elem.find('.channel[data-chan="'+id+'"]');
+    channel.addClass('active');
+    window.history.replaceState({}, "", "#" +encodeURIComponent(channel.attr('data-name')));
     input.focus();
   }
 
   function renderChannel(name, id) {
-    $('#start').hide();
+    input.removeAttr('disabled');
     var elem = $('<div/>', {
+      'id': id,
       'data-chan': id,
+      'data-name': name,
       'class': 'channel'
     });
     elem.append($('<table/>', {
@@ -321,8 +373,13 @@ $(document).ready(function() {
     channels_elem.append(elem);
 
     var a = $('<a/>', {href: '#'}).text(name);
+    var close = $('<button/>', {
+      type: "button",
+      'class': "close",
+      'aria-hidden':"true"
+    }).html("×");
     var li = $('<li/>', {'data-chan': id}).html(a);
-    nav.append(li);
+    nav.append(li.append(close).append(a));
 
     focusChannel(id);
   }

@@ -47,8 +47,10 @@ sub remove_client {
     for my $chan (@$channels) {
       my $key = channel_key $chan;
       $self->{redis}->srem($key, $id, sub {});
-      $self->broadcast($key, part => {
-        client => $id, channel => $key
+      $self->broadcast($key, {
+        part => {
+          client => $id, channel => $key
+        }
       });
     }
   });
@@ -84,19 +86,23 @@ sub join_channel {
     channel_id => $chan_id,
     channel_name => $req->{channel},
   });
-  $self->broadcast($chan_id, join => {
-    channel => $chan_id,
-  });
+  $self->broadcast($chan_id, 
+    exclude => $client->id,
+    {join => {channel => $chan_id}}
+  );
 
 }
 
 sub broadcast {
-  my ($self, $channel, %message) = @_;
+  my $message = pop @_;
+  my ($self, $channel, %opt) = @_;
 
   $self->{redis}->smembers($channel, sub {
     my $members = shift;
-    my @clients = grep {$_} map {$self->{clients}{$_}} @$members;
-    $_->send(%message) for @clients;
+    my @clients = grep {$_ && (!$opt{exclude} || $_->id != $opt{exclude})}
+                  map {$self->{clients}{$_}}
+                  @$members;
+    $_->send(%$message) for @clients;
   });
 }
 
@@ -114,8 +120,10 @@ sub msg_channel {
     $self->{redis}->set($p->{from} . "-image", encode_json \@frames);
   }
 
-  $self->broadcast($p->{channel}, msg => {
-    map {$_ => $p->{$_}} qw{from channel msg}
+  $self->broadcast($p->{channel}, {
+    msg => {
+      map {$_ => $p->{$_}} qw{from channel msg}
+    }
   });
 }
 

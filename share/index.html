@@ -1,11 +1,12 @@
 <html>
   <head>
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap-theme.min.css">
     <link rel="stylesheet" href="/assets/css/avatars.css">
   </head>
   <body>
     <div id="channels"></div>
-    <div id="input-wrap"><input type="text" class="form-control"></div>
+    <div id="input-wrap"><input type="text" class="form-control" disabled="disabled"></div>
     <div id="right-gutter">
       <input type="text" id="channel" placeholder="join" disabled="disabled" class="form-control">
       <ul id="nav" class="nav nav-pills nav-stacked"></ul>
@@ -14,6 +15,7 @@
       <video autoplay="autoplay" muted="muted"></video>
       <progress value="0" max="100"></progress>
     </div>
+    <div id="overlay"></div>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <script src="/assets/js/adapter.js"></script>
     <script src="/assets/js/avatars.js"></script>

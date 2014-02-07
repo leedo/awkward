@@ -2,6 +2,8 @@ package Awkward;
 
 use Awkward::Client;
 use AnyEvent::Redis;
+use AnyEvent::Fork;
+use AnyEvent::Fork::RPC;
 use JSON::XS;
 use Digest::SHA1 qw{sha1_hex};
 
@@ -116,20 +118,37 @@ sub msg_channel {
   }
 
   my @frames = $p->get_all("frames[]");
-  if (@frames) {
-    $self->{redis}->set($p->{from} . "-image", encode_json \@frames);
-  }
+  my $payload = {
+    msg => { map {$_ => $p->{$_}}
+            qw{from channel msg} }
+  };
 
-  $self->broadcast($p->{channel}, {
-    msg => {
-      map {$_ => $p->{$_}} qw{from channel msg}
-    }
-  });
+  if (@frames) {
+    $self->gifify(encode_json(\@frames), sub {
+      $self->{redis}->set($p->{from} . "-gif", shift);
+      $self->broadcast($p->{channel}, $payload);
+    });
+  }
+  else {
+    $self->broadcast($p->{channel}, $payload);
+  }
 }
 
 sub get_image {
   my ($self, $id, $cb) = @_;
-  $self->{redis}->get("$id-image", $cb);
+  $self->{redis}->get("$id-gif", $cb);
+}
+
+sub gifify {
+  my ($self, $json, $cb) = @_;
+  $self->{fork} ||= AnyEvent::Fork
+    ->new
+    ->require("Awkward::Gif")
+    ->AnyEvent::Fork::RPC::run(
+      "Awkward::Gif::make"
+    );
+
+  $self->{fork}->($json, $cb);
 }
 
 1;

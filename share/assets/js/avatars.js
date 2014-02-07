@@ -1,10 +1,8 @@
 $(document).ready(function() {
   var clients = {}
     , channels = {}
-    , join_queue = []
     , own_id = null
     , own_stream = null
-    , stop_prev = null
     , ws = null
     , overlay = $('#overlay')
     , recorder = $('#recorder')
@@ -91,7 +89,6 @@ $(document).ready(function() {
     }
   });
 
-  setInterval(cycleImages, 100);
   console.log("starting");
   start(); // get ID and open WS
 
@@ -188,46 +185,6 @@ $(document).ready(function() {
     });
   }
 
-  function cycleImages() {
-    $('.frames.on').each(function() {
-      var ol = $(this);
-      var li = ol.find(".visible");
-      var dir = ol.hasClass("reverse") ? ['prev', 'next'] : ['next', 'prev'];
-      for (var i=0; i < dir.length; i++) {
-        var next = li[dir[i]]("li");
-        if (next.length) {
-          next.addClass("visible");
-          li.removeClass("visible");
-          return;
-        }
-        else {
-          ol.toggleClass("reverse");
-        }
-      }
-    });
-  }
-
-  function insertFrames(frames, el, cb) {
-    var ol = $('<ol/>', {'class':'frames on reverse'});
-    $(frames).each(function() {
-      var img = $('<img/>', {src: this});
-      var li = $('<li/>').append(img);
-      ol.append(li);
-    });
-
-    var last = ol.find("li:last-child");
-    var img = last.find("img");
-    last.addClass("visible");
-    el.append(ol);
-    img.on("load", function() {
-      maybeScroll(function() {
-        cb();
-        ol.height(img.height());
-        ol.width(img.width());
-      });
-    });
-  }
-
   function maybeScroll(cb) {
     var outer_height = $(document).height()
       , inner_height = window.innerHeight
@@ -259,19 +216,16 @@ $(document).ready(function() {
     var new_row = $('<tr/>', {
       'class': (consecutive ? "consecutive" : ""),
       'data-user': user
-    }).hide();
+    });
 
     var nick = $('<td/>', {'class': 'nick'});
+    var img = $('<img/>',{src: "/image/"+user+".gif"});
+    nick.append(img);
 
-    $.ajax({
-      url: "/image/" + user,
-      type: "GET",
-      dataType: "json",
-      success: function(frames) {
-        insertFrames(frames, nick, function() {
-          new_row.show()
-        });
-      }
+    maybeScroll(function(scroll) {
+      img.on("load", function() {
+        if (scroll) scroll();
+      });
     });
 
     new_row.prepend(nick);
@@ -315,12 +269,6 @@ $(document).ready(function() {
     };
 
     return ws;
-  }
-
-  function queueJoin (peer, chan) {
-    if (!join_queue[peer])
-      join_queue[peer] = [];
-    join_queue[peer].push(chan);
   }
 
   function handleWSMessage (data) {

@@ -22,7 +22,7 @@ sub make {
     type => "gif",
     gif_delay => 0.1,
     gif_loop => 0,
-  }, @frames, reverse @frames);
+  }, @frames, reverse @frames[1 .. $#frames -1]);
 
   return encode_base64 $out;
 }

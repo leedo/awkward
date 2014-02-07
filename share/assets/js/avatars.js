@@ -175,12 +175,10 @@ $(document).ready(function() {
     $.ajax({
       url: "/identify",
       type: "GET",
-      dataType: "json",
+      dataType: "text",
       success: function(res) {
-        if (res.success) {
-          own_id = res.id;
-          ws = openWebsocket();
-        }
+        own_id = res;
+        ws = openWebsocket();
       }
     });
   }

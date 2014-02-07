@@ -45,16 +45,10 @@ sub remove_client {
   delete $self->{clients}{$id};
 
   # remove from channels
-  $self->{redis}->smembers($id, sub {
+  $self->{redis}->hkeys($id, sub {
     my $channels = shift;
     for my $chan (@$channels) {
-      my $key = channel_key $chan;
-      $self->{redis}->srem($key, $id, sub {});
-      $self->broadcast($key, {
-        part => {
-          client => $id, channel => $key
-        }
-      });
+      $self->part_channel($client, {channel => $chan});
     }
   });
 

@@ -92,9 +92,17 @@ body {
   padding: 3px 10px;
 }
 #nav li button.close {
+  background: transparent;
+  border: none;
+  padding: 0;
+  line-height: 16px;
   float: right;
+  font-weight: bold;
+  color: #fff;
+  opacity: 0;
 }
 #nav li:hover button.close {
+  opacity: 0.8;
 }
 ol.frames li {
   visibility: hidden;

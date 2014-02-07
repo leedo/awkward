@@ -9,6 +9,7 @@ use Digest::SHA1 qw{sha1_hex};
 
 my %ACTIONS = (
   "join"   => "join_channel",
+  "part"   => "part_channel",
   "msg"    => "msg_channel",
 );
 
@@ -31,7 +32,7 @@ sub new_client {
   $self->{redis}->persist($id);
 
   # rejoin channels
-  $self->{redis}->smembers($id, sub {
+  $self->{redis}->hvals($id, sub {
     $self->join_channel($client, {channel => $_}) for @{$_[0]};
   });
 
@@ -80,7 +81,7 @@ sub join_channel {
 
   my $chan_id = channel_key $req->{channel};
 
-  $self->{redis}->sadd($client->id, $req->{channel}, sub {});
+  $self->{redis}->hset($client->id, $chan_id, $req->{channel}, sub {});
   $self->{redis}->sadd($chan_id, $client->id, sub {});
 
   $client->send(joined => {
@@ -92,7 +93,27 @@ sub join_channel {
     exclude => $client->id,
     {join => {channel => $chan_id}}
   );
+}
 
+sub part_channel {
+  my ($self, $client, $req) = @_;
+
+  unless (defined $req->{channel}) {
+    return $client->send(error => "must specify channel");
+  }
+
+  $self->{redis}->srem($req->{channel}, $client->id);
+  $self->{redis}->hdel($client->id, $req->{channel}, sub {
+    my $name = shift;
+    $client->send(parted => {
+      channel_id => $req->{channel},
+      channel_name => $name,
+    });
+  });
+
+  $self->broadcast($req->{channel},
+    {part => {channel => $req->{channel}}}
+  );
 }
 
 sub broadcast {

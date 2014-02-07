@@ -32,12 +32,12 @@ $(document).ready(function() {
   });
 
 
-  nav.on('click', 'li button.close', function(e) {
+  nav.on('click', 'li button', function(e) {
     e.preventDefault();
     var li = $(this).parents("li");
     sendWSData({
       action: "part",
-      channel: li.find('data-chan')
+      channel: li.attr('data-chan')
     });
   });
 
@@ -275,6 +275,18 @@ $(document).ready(function() {
       renderChannel(data.body.channel_name, data.body.channel_id);
       appendEvent(data.body.channel_id, "you joined " + data.body.channel_name);
     }
+    else if (data.type == "parted") {
+      var n = nav.find('li[data-chan="'+data.body.channel_id+'"]');
+
+      if (n.hasClass('active')) {
+        var next = n.siblings();
+        if (next.length)
+          focusChannel(next.first().attr('data-chan'));
+      }
+
+      $('#'+data.body.channel_id).remove();
+      n.remove();
+    }
     else if (data.type == "join") {
       appendEvent(data.body.channel, "someone joined");
     }
@@ -324,7 +336,7 @@ $(document).ready(function() {
       'aria-hidden':"true"
     }).html("×");
     var li = $('<li/>', {'data-chan': id}).html(a);
-    nav.append(li.append(close).append(a));
+    nav.append(li.append(a.prepend(close)));
 
     focusChannel(id);
   }

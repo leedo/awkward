@@ -1,6 +1,7 @@
 $(document).ready(function() {
   var own_id = null
     , own_stream = null
+    , played_audio = false
     , overlay = $('#overlay')
     , recorder = $('#recorder')
     , channels = $('#channels')
@@ -262,6 +263,10 @@ $(document).ready(function() {
         });
         maybeScroll(function(scroll) {
           img.on("load", function() {
+            if (!played_audio) {
+              played_audio = true;
+              // $('#loop').get(0).play();
+            }
             if (scroll) scroll();
           });
         });

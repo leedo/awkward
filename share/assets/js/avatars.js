@@ -161,7 +161,7 @@ $(document).ready(function() {
     var frame = function(count) {
       progress.attr('value', 100 - ((10 - count)*10));
       ctx.drawImage(v, 0, 0, c.width, c.height);
-      frames.push(c.toDataURL("image/jpeg"));
+      frames.push(c.toDataURL("image/jpeg", 0.7));
       if (count > 0) {
         setTimeout(frame, 100, count - 1);
       }

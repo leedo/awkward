@@ -83,6 +83,7 @@ sub join_channel {
   my $chan_id = channel_key $req->{channel};
 
   $self->{redis}->sadd($chan_id, $client->id, sub {
+    return unless $_[0]; # already was in channel
     $self->broadcast($chan_id, 
       exclude => $client->id,
       {join => {channel => $chan_id}}

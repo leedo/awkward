@@ -25,7 +25,8 @@ builder {
   enable "Plack::Middleware::Static",
     path => sub {s!^/assets/!!}, root => "share/assets";
 
-  mount "/" => Plack::App::File->new(file => "share/index.html")->to_app;
+  mount "/" => sub { [301, ["Location", "/chat/"], ["redirect"]] };
+  mount "/chat" => Plack::App::File->new(file => "share/index.html")->to_app;
 
   mount "/image" => sub {
     my $env = shift;

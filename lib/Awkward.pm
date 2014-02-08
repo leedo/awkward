@@ -11,6 +11,7 @@ my %ACTIONS = (
   "join"   => "join_channel",
   "part"   => "part_channel",
   "msg"    => "msg_channel",
+  "ping"   => "pong",
 );
 
 sub new {
@@ -33,7 +34,13 @@ sub new_client {
 
   # rejoin channels
   $self->{redis}->hvals($id, sub {
-    $self->join_channel($client, {channel => $_}) for @{$_[0]};
+    my $channels = shift;
+    if (@$channels) {
+      $self->join_channel($client, {channel => $_}) for @$channels;
+    }
+    else {
+      $self->join_channel($client, {channel => "toot"});
+    }
   });
 
   return $client;
@@ -168,6 +175,11 @@ sub gifify {
     );
 
   $self->{fork}->($json, $cb);
+}
+
+sub pong {
+  my ($self, $client, $req) = @_;
+  $client->send(pong => {});
 }
 
 1;

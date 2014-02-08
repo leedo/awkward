@@ -7,22 +7,27 @@ $(document).ready(function() {
     , nav = $('#nav')
     , input = $('#input-wrap input');
 
-  navigator.getUserMedia(
-    {
-      video: {
-        mandatory: {
-          maxWidth: 640
+  if ("getUserMedia" in navigator) {
+    navigator.getUserMedia(
+      {
+        video: {
+          mandatory: {
+            maxWidth: 640
+          },
         },
+        audio: false
       },
-      audio: false
-    },
-    function(s) {
-      own_stream = s;
-    },
-    function(e) {
-      console.log("error getting video stream: " + e);
-    }
-  );
+      function(s) {
+        own_stream = s;
+      },
+      function(e) {
+        console.log("error getting video stream: " + e);
+      }
+    );
+  }
+  else {
+    alert("This browser does not support getUserMedia, so you are unable to chat.");
+  }
 
   $(window).on("focus", function() {
     input.focus();
@@ -285,8 +290,10 @@ $(document).ready(function() {
     ].join("");
 
     var ws = new WebSocket(ws_url);
+    var timer;
 
     ws.onclose = function(e) {
+      clearInterval(timer);
       sendWSData = defaultSendWSData;
       channels.find(".channel").remove();
       $('#channel').attr('disabled', 'disabled');
@@ -299,6 +306,7 @@ $(document).ready(function() {
       sendWSData = function(data) {
         ws.send(JSON.stringify(data));
       };
+      timer = setInterval(sendWSData, 15 * 1000, {action: "ping"});
       $('#channel').removeAttr('disabled');
       if (window.location.hash) {
         var channel = decodeURIComponent(window.location.hash).replace(/^#\/?/, "");
@@ -394,7 +402,7 @@ $(document).ready(function() {
     if (!nav.find("li").length) {
       input.attr('disabled', 'disabled');
       $('#channel').focus();
-      window.history.replaceState({}, "", "/");
+      window.history.replaceState({}, "", "/chat/");
     }
   }
 });

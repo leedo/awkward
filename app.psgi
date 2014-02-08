@@ -14,6 +14,10 @@ use warnings;
 my $app = Awkward->new;
 
 builder {
+  enable "Plack::Middleware::Expires",
+    content_type => qr{^text/(javascript|css)},
+    expires => "M3600";
+
   enable "Plack::Middleware::Static",
     path => sub {s!^/assets/!!}, root => "share/assets";
 

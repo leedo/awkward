@@ -107,19 +107,19 @@ body {
 }
 #recorder {
   display: none;
-  width: 652px;
+  width: 492px;
   z-index: 999;
   position: fixed;
-  top: 50px;
+  top: 30px;
   left: 50%;
-  margin-left: -336px;
+  margin-left: -246px;
   background: #fff;
   border: 1px solid #eee;
   box-shadow: 0 0 3px rgba(0,0,0,0.5);
   padding: 5px;
 }
 #recorder video {
-  width: 640px;
+  width: 480px;
 }
 #recorder progress {
   height: 8px;
@@ -127,7 +127,7 @@ body {
   border: none;
   background: #999;
   color: red;
-  width: 640px;
+  width: 480px;
 }
 #recorder progress.down {
   color: #999;
@@ -171,4 +171,9 @@ body {
   right: 0px;
   z-index: 99;
   background: rgba(0,0,0,0.5);
+}
+div.placeholder {
+  background-position: center center;
+  background-image: url(../img/loading.gif);
+  background-repeat: no-repeat;
 }

@@ -56,16 +56,20 @@ $(document).ready(function() {
 
       var send = last_row.attr('data-user') == own_id ? function(cb){cb()} : beginRecord;
 
-      send(function(frames) {
+      send(function(frames,w,h) {
+        var data = {
+          channel: chan,
+          msg: msg,
+          from: own_id
+        };
+        if (frames) {
+          data["frames"] = frames;
+          data["dimensions"] = w + ":" + h;
+        }
         $.ajax({
           url: "/say",
           type: "POST", 
-          data: {
-            channel: chan,
-            msg: msg,
-            from: own_id,
-            frames: frames
-          },
+          data: data,
           dataType: "json"
         });
       });
@@ -163,7 +167,7 @@ $(document).ready(function() {
       }
       else {
         v.pause();
-        cb(frames);
+        cb(frames, c.width, c.height);
         setTimeout(function() {
           overlay.fadeOut(100);
           recorder.fadeOut(100, function() {
@@ -212,7 +216,7 @@ $(document).ready(function() {
     do_scroll();
   }
 
-  function appendMessage(user, chan, message) {
+  function appendMessage(user, chan, message, dimensions) {
     var messages = channels.find('.channel[data-chan="'+chan+'"] .messages')
       , last_row = messages.find("tr:last-child")
       , last_user = last_row.attr('data-user')
@@ -232,20 +236,31 @@ $(document).ready(function() {
     });
 
     var nick = $('<td/>', {'class': 'nick'});
+    var placeholder = $('<div/>', {'class': 'placeholder'});
+    nick.append(placeholder);
+
+    if (dimensions) {
+      var d = dimensions.split(":");
+      placeholder = placeholder.css({
+        width: d[0],
+        height: d[1]
+      });
+    }
+
     $.ajax({
       url: "/image/"+user+".gif",
       dataType: "text",
       success: function(data) {
         var img = $('<img/>',{
           src: "data:image/gif;base64," + data,
-          title: "click for public URL"
+          title: "click for sharable URL"
         });
         maybeScroll(function(scroll) {
           img.on("load", function() {
             if (scroll) scroll();
           });
         });
-        nick.append(img);
+        placeholder.replaceWith(img);
       }
     });
 
@@ -322,7 +337,7 @@ $(document).ready(function() {
       appendEvent(data.body.channel, "someone left");
     }
     else if (data.type == "msg") {
-      appendMessage(data.body.from, data.body.channel, data.body.msg);
+      appendMessage(data.body.from, data.body.channel, data.body.msg, data.body.dimensions);
     }
   }
 

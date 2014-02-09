@@ -1,10 +1,12 @@
 body {
-  padding-bottom: 40px;
+  margin: 0;
+  padding: 0;
 }
 #mobile-nav {
   display: none;
 }
 #channels {
+  -webkit-overflow-scrolling: touch;
   position: absolute;
   overflow: auto;
   top: 0px;

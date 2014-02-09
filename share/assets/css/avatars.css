@@ -1,11 +1,16 @@
 body {
   padding-bottom: 40px;
-  padding-right: 150px;
 }
 #mobile-nav {
   display: none;
 }
 #channels {
+  position: absolute;
+  overflow: auto;
+  top: 0px;
+  bottom: 40px;
+  left: 0px;
+  right: 150px;
   border-left: 1px solid #fff;
   border-right: 1px solid #fff;
 }
@@ -48,7 +53,7 @@ body {
   width: 300px;
 }
 #input-wrap {
-  position: fixed;
+  position: absolute;
   bottom: 0px;
   left: 0px;
   right: 150px;
@@ -68,7 +73,7 @@ body {
   display: block;
 }
 #right-gutter {
-  position: fixed;
+  position: absolute;
   top: 0px;
   right: 0px;
   bottom: 0px;
@@ -112,7 +117,7 @@ body {
   display: none;
   width: 492px;
   z-index: 999;
-  position: fixed;
+  position: absolute;
   top: 15px;
   left: 50%;
   margin-left: -246px;
@@ -167,7 +172,7 @@ body {
 }
 #overlay {
   display: none;
-  position: fixed;
+  position: absolute;
   top: 0px;
   bottom: 0px;
   left: 0px;
@@ -183,15 +188,12 @@ div.placeholder {
 
 @media (max-width: 568px) {
   #channels {
-    position: absolute;
     top: 45px;
-    bottom: 0px;
     right: 0px;
     left: 0px;
     overflow: auto;
   }
   #right-gutter {
-    position: absolute;
     right: -150px;
     width: 150px;
     z-index: 999;
@@ -201,7 +203,6 @@ div.placeholder {
     display: block;
   }
   #input-wrap {
-    position: absolute;
     right: 0px;
   }
   #mobile-nav {

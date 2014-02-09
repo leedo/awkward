@@ -227,12 +227,14 @@ $(document).ready(function() {
   }
 
   function maybeScroll(cb) {
-    var outer_height = $(document).height()
-      , inner_height = window.innerHeight
-      , scroll = inner_height + $(document).scrollTop() >= outer_height;
+    var chan = $('.channel.active')
+      , outer_height = chan.height()
+      , inner_height = channels.height()
+      , scroll = inner_height + channels.scrollTop() <= outer_height;
 
+    console.log(outer_height, inner_height, scroll);
     var do_scroll = function() {
-      $(document).scrollTop($(document).height());
+      channels.scrollTop(chan.height());
     };
 
     cb(scroll ? do_scroll : false);

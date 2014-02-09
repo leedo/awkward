@@ -114,6 +114,24 @@ $(document).ready(function() {
     xhr.send(fd);
   });
 
+  $('#mobile-menu').on('click', function() {
+    var gutter = $('#right-gutter');
+    if (gutter.hasClass("visible")) {
+      gutter.removeClass("visible");
+    }
+    else {
+      gutter.addClass("visible");
+      var doc = $(document);
+      doc.scrollLeft(150);
+      doc.on("scroll", function(e) {
+        if (doc.scrollLeft() < 75) {
+          gutter.removeClass("visible");
+          doc.off("scroll");
+        }
+      });
+    }
+  });
+
   console.log("starting");
   start(); // get ID and open WS
 
@@ -361,6 +379,7 @@ $(document).ready(function() {
     var channel = channels.find('.channel[data-chan="'+id+'"]');
     channel.addClass('active');
     window.history.replaceState({}, "", "#/" +encodeURIComponent(channel.attr('data-name')));
+    $('#channel-title').text(channel.attr('data-name'));
     input.focus();
   }
 

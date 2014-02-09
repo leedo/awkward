@@ -2,6 +2,9 @@ body {
   padding-bottom: 40px;
   padding-right: 150px;
 }
+#mobile-nav {
+  display: none;
+}
 #channels {
   border-left: 1px solid #fff;
   border-right: 1px solid #fff;
@@ -176,4 +179,64 @@ div.placeholder {
   background-position: center center;
   background-image: url(../img/loading.gif);
   background-repeat: no-repeat;
+}
+
+@media (max-width: 568px) {
+  #channels {
+    position: absolute;
+    top: 45px;
+    bottom: 0px;
+    right: 0px;
+    left: 0px;
+    overflow: auto;
+  }
+  #right-gutter {
+    position: absolute;
+    right: -150px;
+    width: 150px;
+    z-index: 999;
+    display: none;
+  }
+  #right-gutter.visible {
+    display: block;
+  }
+  #input-wrap {
+    position: absolute;
+    right: 0px;
+  }
+  #mobile-nav {
+    display: block;
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    left: 0px;
+    height: 45px;
+    text-align: center;
+    background: #333;
+    z-index:999;
+  }
+  #mobile-menu {
+    font-size: 32px;
+    line-height: 32px;
+    color: #eee;
+    position: absolute;
+    right: 4px;
+    top: 4px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: #000;
+    cursor: pointer;
+  }
+  #channel-title {
+    color: #fff;
+    font-size: 32px;
+  }
+
+  body {
+    padding-right: 0;
+  }
+
+  body > a {
+    display: none;
+  }
 }

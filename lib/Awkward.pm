@@ -86,7 +86,7 @@ sub join_channel {
     return unless $_[0]; # already was in channel
     $self->broadcast($chan_id, 
       exclude => $client->id,
-      {join => {channel => $chan_id}}
+      [join => {channel => $chan_id}]
     );
   });
 
@@ -94,6 +94,21 @@ sub join_channel {
     $client->send(joined => {
       channel_id => $chan_id,
       channel_name => $req->{channel},
+    });
+    $self->send_backlog($client, $chan_id);
+  });
+}
+
+sub send_backlog {
+  my ($self, $client, $channel) = @_;
+  $self->{redis}->lrange("$channel-messages", 0, -1, sub {
+    my @ids = map {"message-$_"} @{$_[0]};
+    $self->{redis}->mget(@ids, sub {
+      $messages = shift;
+      $client->send(backlog => {
+        channel => $channel,
+        messages => $messages,
+      });
     });
   });
 }
@@ -117,7 +132,7 @@ sub part_channel {
 
   $self->{redis}->srem($req->{channel}, $client->id, sub {
     $self->broadcast($req->{channel},
-      {part => {channel => $req->{channel}}}
+      [part => {channel => $req->{channel}}]
     );
   });
 }
@@ -125,13 +140,30 @@ sub part_channel {
 sub broadcast {
   my $message = pop @_;
   my ($self, $channel, %opt) = @_;
+  my ($type, $body) = @$message;
+  my $cv = AE::cv;
 
-  $self->{redis}->smembers($channel, sub {
-    my $members = shift;
-    my @clients = grep {$_ && (!$opt{exclude} || $_->id != $opt{exclude})}
-                  map {$self->{clients}{$_}}
-                  @$members;
-    $_->send(%$message) for @clients;
+  # store it and set expire
+  $self->{redis}->incr("msgid", sub {
+    my $id = shift;
+    $body->{id} = $id;
+    if (defined $opt{frames}) {
+      $self->{redis}->setex("frames-$id", 60 * 5, $opt{frames});
+    }
+    $self->{redis}->lpush("$channel-messages", $id);
+    $self->{redis}->setex("message-$id", 60 * 5, encode_json $message);
+    $cv->send($id);
+  });
+
+  # broadcast it
+  $cv->cb(sub {
+    $self->{redis}->smembers($channel, sub {
+      my $members = shift;
+      my @clients = grep {$_ && (!$opt{exclude} || $_->id != $opt{exclude})}
+                    map {$self->{clients}{$_}}
+                    @$members;
+      $_->send($type, $body) for @clients;
+    });
   });
 }
 
@@ -145,15 +177,14 @@ sub msg_channel {
   }
 
   my @frames = $p->get_all("frames[]");
-  my $payload = {
+  my $payload = [
     msg => { map {$_ => $p->{$_}}
             qw{from channel msg dimensions} }
-  };
+  ];
 
   if (@frames) {
     $self->gifify(encode_json(\@frames), sub {
-      $self->{redis}->setex($p->{from} . "-gif", 60 * 5, $_[0]);
-      $self->broadcast($p->{channel}, $payload);
+      $self->broadcast($p->{channel}, frames => $_[0], $payload);
     });
   }
   else {
@@ -163,7 +194,7 @@ sub msg_channel {
 
 sub get_image {
   my ($self, $id, $cb) = @_;
-  $self->{redis}->get("$id-gif", $cb);
+  $self->{redis}->get("frames-$id", $cb);
 }
 
 sub gifify {

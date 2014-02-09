@@ -57,12 +57,9 @@ $(document).ready(function() {
       }
 
       var chan = channels.find('.active').attr('data-chan')
-        , msg = input.val()
-        , last_row = channels.find('.channel[data-chan="'+chan+'"] .messages tr:last-child');
+        , msg = input.val();
 
-      var send = last_row.attr('data-user') == own_id ? function(cb){cb()} : beginRecord;
-
-      send(function(frames,w,h) {
+      beginRecord(function(frames,w,h) {
         var data = {
           channel: chan,
           msg: msg,
@@ -204,13 +201,19 @@ $(document).ready(function() {
     frame(10);
   }
 
-  function appendEvent(chan, message) {
-    var messages = channels.find('.channel[data-chan="'+chan+'"] .messages')
+  function appendEvent(event) {
+    if ($('#event-'+event.id).length)
+      return;
+    var messages = channels.find('.channel[data-chan="'+event.channel+'"] .messages')
+      , insert = event["backlog"] ? "prepend" : "append"
       , tr = $('<tr/>', {'class':'event'})
-      , td = $('<td/>', {'colspan':'2'}).text(message);
+      , td = $('<td/>', {'colspan':'2'}).text(event.msg);
 
-    maybeScroll(function() {
-      messages.append(tr.append(td));
+    if (event.id)
+      tr.attr('id', "event-" + event.id);
+
+    maybeScroll(function(scroll) {
+      messages[insert](tr.append(td));
     });
   }
 
@@ -227,78 +230,71 @@ $(document).ready(function() {
   }
 
   function maybeScroll(cb) {
-    var chan = $('.channel.active')
-      , outer_height = chan.height()
-      , inner_height = channels.height()
-      , scroll = inner_height + channels.scrollTop() <= outer_height;
+    var chan = $('.channel.active');
+    if (!chan.length) return;
 
-    console.log(outer_height, inner_height, scroll);
+    var outer_height = chan.height()
+      , inner_height = channels.height()
+      , scroll = inner_height + channels.scrollTop() >= outer_height;
+
     var do_scroll = function() {
       channels.scrollTop(chan.height());
     };
 
     cb(scroll ? do_scroll : false);
 
-    do_scroll();
+    if (scroll) do_scroll();
   }
 
-  function appendMessage(user, chan, message, dimensions) {
-    var messages = channels.find('.channel[data-chan="'+chan+'"] .messages')
+  function appendMessage(message) {
+    if ($('#msg-'+message.id).length)
+      return;
+
+    var messages = channels.find('.channel[data-chan="'+message.channel+'"] .messages')
       , last_row = messages.find("tr:last-child")
       , last_user = last_row.attr('data-user')
-      , consecutive = last_user == user
+      , insert = message["backlog"] ? "prepend" : "append"
       , stream = null;
 
-    if (consecutive) {
-      maybeScroll(function() {
-        last_row.find(".body").append("<br>").append($('<span/>').text(message));
-      });
-      return;
-    }
-
     var new_row = $('<tr/>', {
-      'class': (consecutive ? "consecutive" : ""),
-      'data-user': user
+      'id': 'msg-'+message.id,
+      'data-user': message.from
     });
 
     var nick = $('<td/>', {'class': 'nick'});
     var placeholder = $('<div/>', {'class': 'placeholder'});
     nick.append(placeholder);
 
-    if (dimensions) {
-      var d = dimensions.split(":");
-      placeholder = placeholder.css({
-        width: d[0],
-        height: d[1]
-      });
-    }
+    var d = message.dimensions.split(":");
+    placeholder = placeholder.css({
+      width: d[0],
+      height: d[1]
+    });
 
     $.ajax({
-      url: "/image/"+user+".gif",
+      url: "/image/"+message.id+".gif",
       dataType: "text",
-      success: function(data) {
+      success: function(frames) {
         var img = $('<img/>',{
-          src: "data:image/gif;base64," + data,
-          title: "click for sharable URL"
+          src: "data:image/gif;base64," + frames,
+          title: "click for sharable URL",
+          width: d[0],
+          height: d[1]
         });
         maybeScroll(function(scroll) {
           img.on("load", function() {
-            if (!played_audio) {
-              played_audio = true;
-              // $('#loop').get(0).play();
-            }
             if (scroll) scroll();
           });
+          placeholder.replaceWith(img);
         });
-        placeholder.replaceWith(img);
       }
     });
 
     new_row.prepend(nick);
-    new_row.append($('<td/>',{'class':"body"}).text(message));
+    new_row.append($('<td/>',{'class':"body"}).text(message.msg));
 
-    maybeScroll(function() {
-      messages.append(new_row);
+    maybeScroll(function(scroll) {
+      messages[insert](new_row);
     });
   }
 
@@ -357,20 +353,42 @@ $(document).ready(function() {
     if (data.type == "joined") {
       if ($('#'+data.body.channel_id).length) return;
       renderChannel(data.body.channel_name, data.body.channel_id);
-      appendEvent(data.body.channel_id, "you joined " + data.body.channel_name);
+      appendEvent({
+        channel: data.body.channel_id,
+        msg: "you joined " + data.body.channel_name
+      });
     }
     else if (data.type == "parted") {
       removeChannel(data.body.channel_id);
     }
     else if (data.type == "join") {
-      appendEvent(data.body.channel, "someone joined");
+      appendEvent({
+        id: data.body.id,
+        channel: data.body.channel,
+        backlog: data.body.backlog ? true : false,
+        msg: "someone joined",
+      });
     }
     else if (data.type == "part") {
       $('.messages').find('tr[data-user="'+data.body.client+'"]').addClass("disconnected");
-      appendEvent(data.body.channel, "someone left");
+      appendEvent({
+        id: data.body.id,
+        channel: data.body.channel,
+        backlog: data.body.backlog ? true : false,
+        msg: "someone left"
+      });
     }
     else if (data.type == "msg") {
-      appendMessage(data.body.from, data.body.channel, data.body.msg, data.body.dimensions);
+      appendMessage(data.body);
+    }
+    else if (data.type == "backlog") {
+      $(data.body.messages).each(function(i, json) {
+        if (json) {
+          var message = JSON.parse(json);
+          message[1]["backlog"] = true;
+          handleWSMessage({type: message[0], body: message[1]});
+        }
+      });
     }
   }
 

@@ -107,8 +107,16 @@ sub send_backlog {
       $messages = shift;
       $client->send(backlog => {
         channel => $channel,
-        messages => $messages,
+        messages => [grep {$_} @$messages], # filter out expired
       });
+
+      # trim channel up to first expired message
+      for my $index (0..@$messages - 1) {
+        if (!$messages->[$index]) {
+          $self->{redis}->ltrim("$channel-messages", 0, $index - 1);
+          return;
+        }
+      }
     });
   });
 }

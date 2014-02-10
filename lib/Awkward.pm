@@ -156,10 +156,10 @@ sub broadcast {
     my $id = shift;
     $body->{id} = $id;
     if (defined $opt{frames}) {
-      $self->{redis}->setex("frames-$id", 60 * 5, $opt{frames});
+      $self->{redis}->setex("frames-$id", 60 * 60, $opt{frames});
     }
     $self->{redis}->lpush("$channel-messages", $id);
-    $self->{redis}->setex("message-$id", 60 * 5, encode_json $message);
+    $self->{redis}->setex("message-$id", 60 * 60, encode_json $message);
     $cv->send($id);
   });
 

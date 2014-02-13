@@ -106,10 +106,13 @@ sub send_backlog {
     my @ids = map {"message-$_"} @{$_[0]};
     $self->{redis}->mget(@ids, sub {
       $messages = shift;
-      $client->send(backlog => {
-        channel => $channel,
-        messages => [grep {$_} @$messages], # filter out expired
-      });
+      for (@$messages) {
+        next unless $_;
+        $client->send(backlog => {
+          channel => $channel,
+          messages => [decode utf8 => $_],
+        });
+      }
 
       # trim channel up to first expired message
       for my $index (0..@$messages - 1) {
@@ -157,10 +160,10 @@ sub broadcast {
     my $id = shift;
     $body->{id} = $id;
     if (defined $opt{frames}) {
-      $self->{redis}->setex("frames-$id", 60 * 60, $opt{frames});
+      $self->{redis}->setex("frames-$id", 60 * 60 * 24, $opt{frames});
     }
     $self->{redis}->lpush("$channel-messages", $id);
-    $self->{redis}->setex("message-$id", 60 * 60, encode_json $message);
+    $self->{redis}->setex("message-$id", 60 * 60 * 24, encode_json $message);
     $cv->send($id);
   });
 

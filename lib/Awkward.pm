@@ -106,13 +106,9 @@ sub send_backlog {
     my @ids = map {"message-$_"} @{$_[0]};
     $self->{redis}->mget(@ids, sub {
       $messages = shift;
-      for (@$messages) {
-        next unless $_;
-        $client->send(backlog => {
-          channel => $channel,
-          messages => [decode utf8 => $_],
-        });
-      }
+
+      $client->send(backlog => decode(utf8 => $_))
+        for grep {$_} @$messages;
 
       # trim channel up to first expired message
       for my $index (0..@$messages - 1) {

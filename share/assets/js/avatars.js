@@ -388,13 +388,9 @@ $(document).ready(function() {
       appendMessage(data.body);
     }
     else if (data.type == "backlog") {
-      $(data.body.messages).each(function(i, json) {
-        if (json) {
-          var message = JSON.parse(json);
-          message[1]["backlog"] = true;
-          handleWSMessage({type: message[0], body: message[1]});
-        }
-      });
+      var message = JSON.parse(data.body);
+      message[1]["backlog"] = true;
+      handleWSMessage({type: message[0], body: message[1]});
     }
   }
 

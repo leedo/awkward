@@ -103,6 +103,7 @@ sub join_channel {
 sub send_backlog {
   my ($self, $client, $channel) = @_;
   $self->{redis}->lrange("$channel-messages", 0, -1, sub {
+    return unless @{$_[0]};
     my @ids = map {"message-$_"} @{$_[0]};
     $self->{redis}->mget(@ids, sub {
       $messages = shift;

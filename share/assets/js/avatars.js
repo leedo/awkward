@@ -265,10 +265,14 @@ $(document).ready(function() {
     var placeholder = $('<div/>', {'class': 'placeholder'});
     nick.append(placeholder);
 
-    var d = message.dimensions.split(":");
+    var d = message.dimensions.split(":")
+      , aspect = d[0] / d[1]
+      , width = 150
+      , height = parseInt(150 / aspect);
+
     placeholder = placeholder.css({
-      width: d[0],
-      height: d[1]
+      width: width,
+      height: height
     });
 
     $.ajax({
@@ -278,8 +282,8 @@ $(document).ready(function() {
         var img = $('<img/>',{
           src: "data:image/gif;base64," + frames,
           title: "click for sharable URL",
-          width: d[0],
-          height: d[1]
+          width: width,
+          height: height
         });
         maybeScroll(function(scroll) {
           img.on("load", function() {
@@ -361,6 +365,7 @@ $(document).ready(function() {
     else if (data.type == "parted") {
       removeChannel(data.body.channel_id);
     }
+    /*
     else if (data.type == "join") {
       appendEvent({
         id: data.body.id,
@@ -378,6 +383,7 @@ $(document).ready(function() {
         msg: "someone left"
       });
     }
+    */
     else if (data.type == "msg") {
       appendMessage(data.body);
     }

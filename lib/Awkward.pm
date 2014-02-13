@@ -4,6 +4,7 @@ use Awkward::Client;
 use AnyEvent::Redis;
 use AnyEvent::Fork;
 use AnyEvent::Fork::RPC;
+use Encode;
 use JSON::XS;
 use Digest::SHA1 qw{sha1_hex};
 
@@ -182,6 +183,7 @@ sub msg_channel {
   my $p = $req->parameters;
   for (qw{channel from msg}) {
     die "missing $_" unless defined $p->{$_};
+    $p->{$_} = decode "utf8", $p->{$_};
   }
 
   my @frames = $p->get_all("frames[]");

@@ -85,17 +85,22 @@ body {
   border-left: 1px solid #bbb;
   background: #eee;
 }
-
-.messages li:not(.event) + li.event {
-  border-top: 1px solid #fff;
+li.event {
+clear: both;
+float: none;
+width: auto;
+background: none;
+box-shadow: none;
+border-bottom: 1px solid #ccc;
+height: 13px;
+overflow: visible;
+padding: 0;
 }
-
-.messages li.event {
-  padding: 5px 10px;
-  background: #CFEAFF;
+li.event span {
+  background: #eee;
+  color: #bbb;
   font-size: 12px;
-  color: #333;
-  border-bottom: 1px solid #fff;
+  padding: 0 3px;
 }
 #nav {
   margin-top: 10px;

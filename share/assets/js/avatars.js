@@ -213,14 +213,19 @@ $(document).ready(function() {
     if ($('#event-'+event.id).length)
       return;
     var messages = channels.find('.channel[data-chan="'+event.channel+'"] .messages')
-      , insert = event["backlog"] ? "prepend" : "append"
-      , li = $('<li/>', {'class':'event'}).text(event.msg);
+      , span = $('<span />').text(event.msg)
+      , li = $('<li/>', {'class':'event'}).append(span);
 
     if (event.id)
       li.attr('id', "event-" + event.id);
 
     maybeScroll(function(scroll) {
-      messages[insert](li);
+      if (event['backlog']) {
+        messages.prepend(li);
+      }
+      else {
+        messages.find('li.input').before(li);
+      }
     });
   }
 
@@ -368,12 +373,10 @@ $(document).ready(function() {
     if (data.type == "joined") {
       if ($('#'+data.body.channel_id).length) return;
       renderChannel(data.body.channel_name, data.body.channel_id);
-      /*
       appendEvent({
         channel: data.body.channel_id,
         msg: "you joined " + data.body.channel_name
       });
-     */
     }
     else if (data.type == "parted") {
       removeChannel(data.body.channel_id);

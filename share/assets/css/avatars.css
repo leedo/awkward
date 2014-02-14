@@ -31,6 +31,9 @@ body {
   overflow: auto;
   background: #fff;
 }
+.messages li.self {
+  background-color: #FFFCF0;
+}
 .messages .form-control {
   margin-top: 12px;
 }
@@ -179,6 +182,10 @@ body {
   right: 0px;
   z-index: 99;
   background: rgba(0,0,0,0.5);
+}
+li.input {
+  background-color: transparent;
+  box-shadow: none;
 }
 li.input div.placeholder {
   background-image: none;

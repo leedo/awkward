@@ -276,6 +276,9 @@ $(document).ready(function() {
       'data-user': message.from
     });
 
+    if (message.from == own_id)
+      new_msg.addClass("self");
+
     var placeholder = $('<div/>', {'class': 'placeholder'});
 
     var d = message.dimensions.split(":")

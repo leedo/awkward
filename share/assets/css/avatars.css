@@ -15,6 +15,7 @@ body {
   right: 150px;
   border-left: 1px solid #fff;
   border-right: 1px solid #fff;
+  background: #efefef;
 }
 .messages li {
   position: relative;
@@ -22,9 +23,13 @@ body {
   margin: 5px;
   border-radius: 3px;
   box-shadow: 0 2px 3px rgba(0,0,0,0.25);
-  padding: 5px 8px;
+  padding: 8px;
   float: left;
   text-align: center;
+  width: 218px;
+  height: 218px;
+  overflow: auto;
+  background: #fff;
 }
 .messages img {
   width: 300px;
@@ -39,6 +44,7 @@ body {
 }
 .messages {
   width: 100%;
+  overflow: hidden;
   list-style: none;
   margin: 0;
   padding: 0;

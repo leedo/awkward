@@ -129,6 +129,28 @@ $(document).ready(function() {
     }
   });
 
+  var resizing = null
+    , resizing_scroll = null;
+    
+  function resizingScroll() {
+    resizing = null;
+    if (resizing_scroll) {
+      resizing_scroll();
+      resizing_scroll = null;
+    }
+  }
+
+  $(window).on("resize", function() {
+    if (resizing) return;
+    if (!resizing_scroll) {
+      maybeScroll(function(scroll) {
+        if (!scroll) return;
+        resizing_scroll = scroll;
+      });
+    }
+    resizing = setTimeout(resizingScroll, 200);
+  });
+
   console.log("starting");
   start(); // get ID and open WS
 

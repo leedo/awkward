@@ -188,8 +188,10 @@ sub msg_channel {
 
   my @frames = $p->get_all("frames[]");
   my $payload = [
-    msg => { map {$_ => $p->{$_}}
-            qw{from channel msg dimensions} }
+    msg => {
+      time => time,
+      map {$_ => $p->{$_}} qw{from channel msg dimensions}
+    }
   ];
 
   if (@frames) {

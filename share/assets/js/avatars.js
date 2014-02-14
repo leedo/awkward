@@ -5,8 +5,7 @@ $(document).ready(function() {
     , overlay = $('#overlay')
     , recorder = $('#recorder')
     , channels = $('#channels')
-    , nav = $('#nav')
-    , input = $('#input-wrap input');
+    , nav = $('#nav');
 
   if ("getUserMedia" in navigator) {
     navigator.getUserMedia(
@@ -30,10 +29,6 @@ $(document).ready(function() {
     alert("This browser does not support getUserMedia, so you are unable to chat.");
   }
 
-  $(window).on("focus", function() {
-    input.focus();
-  });
-
   nav.on('click', 'li button', function(e) {
     e.preventDefault();
     var li = $(this).parents("li");
@@ -49,7 +44,7 @@ $(document).ready(function() {
     focusChannel(li.attr('data-chan'));
   });
 
-  input.on("keypress", function(e) {
+  $('#channels').on("keypress", 'li.input input', function(e) {
     if (e.keyCode == 13) {
       if (!own_stream) {
         alert("Must allow video capture");
@@ -57,7 +52,7 @@ $(document).ready(function() {
       }
 
       var chan = channels.find('.active').attr('data-chan')
-        , msg = input.val();
+        , msg = $(this).val();
 
       beginRecord(function(frames,w,h) {
         var data = {
@@ -77,7 +72,7 @@ $(document).ready(function() {
         });
       });
 
-      input.val('');
+      $(this).val('');
     }
   });
 
@@ -274,7 +269,6 @@ $(document).ready(function() {
     var messages = channels.find('.channel[data-chan="'+message.channel+'"] .messages')
       , last_msg = messages.find("li:last-child")
       , last_user = last_msg.attr('data-user')
-      , insert = message["backlog"] ? "prepend" : "append"
       , stream = null;
 
     var new_msg = $('<li/>', {
@@ -317,7 +311,12 @@ $(document).ready(function() {
     new_msg.append($('<span/>', {'class':'body'}).text(message.msg));
 
     maybeScroll(function(scroll) {
-      messages[insert](new_msg);
+      if (message['backlog']) {
+        messages.prepend(new_msg);
+      }
+      else {
+        messages.find('li.input').before(new_msg);
+      }
     });
   }
 
@@ -341,7 +340,6 @@ $(document).ready(function() {
       sendWSData = defaultSendWSData;
       channels.find(".channel").remove();
       $('#channel').attr('disabled', 'disabled');
-      input.attr('disabled', 'disabled');
       nav.find("li").remove();
       setTimeout(openWebsocket, 3000);
     };
@@ -423,23 +421,32 @@ $(document).ready(function() {
     channel.addClass('active');
     window.history.replaceState({}, "", "#/" +encodeURIComponent(channel.attr('data-name')));
     $('#channel-title').text(channel.attr('data-name'));
-    input.focus();
+    channel.find("li.input input").focus();
   }
 
   function renderChannel(name, id) {
-    input.removeAttr('disabled');
     var elem = $('<div/>', {
       'id': id,
       'data-chan': id,
       'data-name': name,
       'class': 'channel'
     });
-    elem.append($('<ol/>', {
+    var ol = $('<ol/>', {
       'class': 'messages',
       cellspacing: 0,
       cellpadding: 0,
       border: 0
-    }));
+    });
+    var li = $('<li/>',{'class':'input'});
+    var placeholder = $('<div/>', {'class':'placeholder'});
+    var input = $('<input/>', {
+      "type": "text",
+      "class": "form-control",
+    });
+    li.append(placeholder);
+    li.append(input);
+    ol.append(li);
+    elem.append(ol);
     channels.append(elem);
 
     var a = $('<a/>', {href: '#'}).text(name);

@@ -10,7 +10,7 @@ body {
   position: absolute;
   overflow: auto;
   top: 0px;
-  bottom: 40px;
+  bottom: 0px;
   left: 0px;
   right: 150px;
   border-left: 1px solid #fff;
@@ -30,6 +30,9 @@ body {
   height: 218px;
   overflow: auto;
   background: #fff;
+}
+.messages .form-control {
+  margin-top: 12px;
 }
 .messages img {
   width: 300px;
@@ -59,16 +62,6 @@ body {
 #join-dialog input[type="text"] {
   width: 300px;
 }
-#input-wrap {
-  position: absolute;
-  bottom: 0px;
-  left: 0px;
-  right: 150px;
-  padding: 2px;
-  background: #eee;
-  border-top: 1px solid #ccc;
-}
-#input-wrap,
 .channel h2 {
   z-index: 9;
 }
@@ -187,7 +180,12 @@ body {
   z-index: 99;
   background: rgba(0,0,0,0.5);
 }
+li.input div.placeholder {
+  background-image: none;
+}
 div.placeholder {
+  min-height: 149px;
+  background-color: #eee;
   background-position: center center;
   background-image: url(../img/loading.gif);
   background-repeat: no-repeat;
@@ -208,9 +206,6 @@ div.placeholder {
   }
   #right-gutter.visible {
     display: block;
-  }
-  #input-wrap {
-    right: 0px;
   }
   #mobile-nav {
     display: block;

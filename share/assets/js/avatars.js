@@ -206,14 +206,13 @@ $(document).ready(function() {
       return;
     var messages = channels.find('.channel[data-chan="'+event.channel+'"] .messages')
       , insert = event["backlog"] ? "prepend" : "append"
-      , tr = $('<tr/>', {'class':'event'})
-      , td = $('<td/>', {'colspan':'2'}).text(event.msg);
+      , li = $('<li/>', {'class':'event'}).text(event.msg);
 
     if (event.id)
-      tr.attr('id', "event-" + event.id);
+      li.attr('id', "event-" + event.id);
 
     maybeScroll(function(scroll) {
-      messages[insert](tr.append(td));
+      messages[insert](li);
     });
   }
 
@@ -251,24 +250,22 @@ $(document).ready(function() {
       return;
 
     var messages = channels.find('.channel[data-chan="'+message.channel+'"] .messages')
-      , last_row = messages.find("tr:last-child")
-      , last_user = last_row.attr('data-user')
+      , last_msg = messages.find("li:last-child")
+      , last_user = last_msg.attr('data-user')
       , insert = message["backlog"] ? "prepend" : "append"
       , stream = null;
 
-    var new_row = $('<tr/>', {
+    var new_msg = $('<li/>', {
       'id': 'msg-'+message.id,
       'data-user': message.from
     });
 
-    var nick = $('<td/>', {'class': 'nick'});
     var placeholder = $('<div/>', {'class': 'placeholder'});
-    nick.append(placeholder);
 
     var d = message.dimensions.split(":")
       , aspect = d[0] / d[1]
-      , width = 150
-      , height = parseInt(150 / aspect);
+      , width = 200
+      , height = parseInt(200 / aspect);
 
     placeholder = placeholder.css({
       width: width,
@@ -294,11 +291,11 @@ $(document).ready(function() {
       }
     });
 
-    new_row.prepend(nick);
-    new_row.append($('<td/>',{'class':"body"}).text(message.msg));
+    new_msg.prepend(placeholder);
+    new_msg.append($('<span/>', {'class':'body'}).text(message.msg));
 
     maybeScroll(function(scroll) {
-      messages[insert](new_row);
+      messages[insert](new_msg);
     });
   }
 
@@ -357,10 +354,12 @@ $(document).ready(function() {
     if (data.type == "joined") {
       if ($('#'+data.body.channel_id).length) return;
       renderChannel(data.body.channel_name, data.body.channel_id);
+      /*
       appendEvent({
         channel: data.body.channel_id,
         msg: "you joined " + data.body.channel_name
       });
+     */
     }
     else if (data.type == "parted") {
       removeChannel(data.body.channel_id);
@@ -413,7 +412,7 @@ $(document).ready(function() {
       'data-name': name,
       'class': 'channel'
     });
-    elem.append($('<table/>', {
+    elem.append($('<ol/>', {
       'class': 'messages',
       cellspacing: 0,
       cellpadding: 0,

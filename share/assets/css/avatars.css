@@ -16,33 +16,32 @@ body {
   border-left: 1px solid #fff;
   border-right: 1px solid #fff;
 }
-.messages td.nick {
-  width: 100px;
-  padding: 0;
-  background: #eee;
-  border-bottom: 1px solid #eee;
+.messages li {
   position: relative;
-}
-.messages td.body {
-  position: relative;
-  border-bottom: 1px solid #eee;
+  border: 1px solid #eee;
+  margin: 5px;
+  border-radius: 3px;
+  box-shadow: 0 2px 3px rgba(0,0,0,0.25);
   padding: 5px 8px;
+  float: left;
+  text-align: center;
 }
-.messages td {
-  vertical-align: top;
-}
-.messages td.nick img {
-  width: 150px;
+.messages img {
+  width: 300px;
   height: auto;
   margin: 0;
   display: block;
   cursor: pointer;
+  margin-bottom: 5px;
 }
-.messages tr.disconnected td.nick img {
+.messages li.disconnected img {
   -webkit-filter: grayscale(100%);
 }
 .messages {
   width: 100%;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 #join-dialog {
   width: 300px;
@@ -85,11 +84,11 @@ body {
   background: #eee;
 }
 
-.messages tr:not(.event) + tr.event td {
+.messages li:not(.event) + li.event {
   border-top: 1px solid #fff;
 }
 
-.messages tr.event td {
+.messages li.event {
   padding: 5px 10px;
   background: #CFEAFF;
   font-size: 12px;

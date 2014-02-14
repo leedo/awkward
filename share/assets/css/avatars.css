@@ -132,25 +132,28 @@ body {
 #recorder video {
   width: 480px;
 }
-#recorder progress {
-  height: 8px;
+li.input progress {
+  height: 2px;
   display: block;
   border: none;
-  background: #999;
+  background: transparent;
+  width: 100%;
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+  color: #ccc;
+}
+li.input progress.on {
   color: red;
-  width: 480px;
 }
-#recorder progress.down {
-  color: #999;
-}
-#recorder progress.down::-webkit-progress-value {
-  background: #999;
-}
-#recorder progress::-webkit-progress-value {
+li.input progress.on::-webkit-progress-value {
   background: red;
 }
-#recorder progress::-webkit-progress-bar {
-  background: #eee;
+li.input progress::-webkit-progress-value {
+  background: #ccc;
+}
+li.input progress::-webkit-progress-bar {
+  background: transparent;
 }
 #recorder span.countdown {
   position: absolute;
@@ -161,28 +164,6 @@ body {
   color: rgba(255,255,255,0.75);
   text-shadow: 0 0 3px rgba(0,0,0,0.5);
 }
-#recorder span.flash {
-  background: #fff;
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  right: 0px;
-  bottom: 0px;
-  display: none;
-}
-#recorder span.flash.on {
-  display: block;
-}
-#overlay {
-  display: none;
-  position: absolute;
-  top: 0px;
-  bottom: 0px;
-  left: 0px;
-  right: 0px;
-  z-index: 99;
-  background: rgba(0,0,0,0.5);
-}
 li.input {
   background-color: transparent;
   box-shadow: none;
@@ -191,6 +172,7 @@ li.input div.placeholder {
   background-image: none;
 }
 div.placeholder {
+  position: relative;
   min-height: 149px;
   background-color: #eee;
   background-position: center center;

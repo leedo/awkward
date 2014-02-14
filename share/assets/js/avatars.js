@@ -2,8 +2,6 @@ $(document).ready(function() {
   var own_id = null
     , own_stream = null
     , played_audio = false
-    , overlay = $('#overlay')
-    , recorder = $('#recorder')
     , channels = $('#channels')
     , nav = $('#nav');
 
@@ -150,14 +148,15 @@ $(document).ready(function() {
   start(); // get ID and open WS
 
   function beginRecord(cb) {
-    var video = recorder.find('video')
-      , progress = recorder.find('progress')
-      , flash = recorder.find('span.flash')
-      , clock = recorder.find('span.countdown');
+    var channel = channels.find('.channel.active')
+      , input = channel.find('li.input')
+      , placeholder = input.find('.placeholder')
+      , video = $('<video/>')
+      , progress = $('<progress/>', {value: 0, max: 100});
 
-    progress.attr('value', 0);
-    progress.addClass('down');
-    recorder.removeClass("recording");
+    video.width(placeholder.width());
+    video.height(placeholder.height());
+    placeholder.append(video).append(progress);
 
     var countdown = function(count) {
       if (count) {
@@ -166,25 +165,21 @@ $(document).ready(function() {
       }
       else {
         progress.attr('value', 200);
-        setTimeout(recordVideo, 150, cb);
+        progress.addClass('on');
+        setTimeout(recordVideo, 150, video, progress, cb);
       }
     };
 
     video.on("loadeddata", function() {
       video.off("loadeddata");
-      overlay.show();
-      recorder.show();
       countdown(10);
     });
 
     video.attr('src', URL.createObjectURL(own_stream));
   }
 
-  function recordVideo(cb) {
-    var recorder = $('#recorder')
-      , video = recorder.find('video')
-      , progress = recorder.find('progress')
-      , v = video.get(0)
+  function recordVideo(video, progress, cb) {
+    var v = video.get(0)
       , w = video.width()
       , h = video.height()
       , aspect = w / h
@@ -205,13 +200,9 @@ $(document).ready(function() {
       }
       else {
         v.pause();
+        video.remove();
+        progress.remove();
         cb(frames, c.width, c.height);
-        setTimeout(function() {
-          overlay.fadeOut(100);
-          recorder.fadeOut(100, function() {
-            video.removeAttr('src');
-          });
-        }, 200);
       }
     };
 

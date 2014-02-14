@@ -191,8 +191,8 @@ $(document).ready(function() {
       , c = document.createElement('canvas')
       , ctx = c.getContext('2d');
 
-    c.width = 150
-    c.height = parseInt(150 / aspect);
+    c.width = 200
+    c.height = parseInt(200 / aspect);
     progress.removeClass('down');
 
     var frames = [];

@@ -332,7 +332,7 @@ $(document).ready(function() {
           if (scroll) scroll();
           slider.replaceWith(new_msg);
         });
-        slider.width(last.outerWidth() + 10); // + 10 for margin
+        slider.width(last.outerWidth());
       }
     });
   }

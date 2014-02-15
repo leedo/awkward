@@ -85,7 +85,7 @@ $(document).ready(function() {
     }
   });
 
-  channels.on("click", ".nick img", function() {
+  channels.on("click", "img", function() {
     var b64 = $(this).attr('src').replace(/^data:image\/gif;base64,/, "")
       , arr = base64DecToArr(b64)
       , blob = new Blob([arr], {type: "image/gif"})
@@ -151,7 +151,7 @@ $(document).ready(function() {
     var channel = channels.find('.channel.active')
       , input = channel.find('li.input')
       , placeholder = input.find('.placeholder')
-      , video = $('<video/>')
+      , video = $('<video/>', {autoplay:"autoplay"})
       , progress = $('<progress/>', {value: 0, max: 100});
 
     video.width(placeholder.width());
@@ -438,7 +438,8 @@ $(document).ready(function() {
     var placeholder = $('<div/>', {'class':'placeholder'});
     var input = $('<input/>', {
       "type": "text",
-      "class": "form-control",
+      "placeholder":"your message",
+      "class": "form-control"
     });
     li.append(placeholder);
     li.append(input);

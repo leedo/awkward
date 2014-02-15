@@ -134,6 +134,7 @@ $(document).ready(function() {
   }
 
   $(window).on("resize", function() {
+    recalcSpacing();
     if (resizing) return;
     if (!resizing_scroll) {
       maybeScroll(function(scroll) {
@@ -144,8 +145,18 @@ $(document).ready(function() {
     resizing = setTimeout(resizingScroll, 200);
   });
 
-  console.log("starting");
+  recalcSpacing();
   start(); // get ID and open WS
+
+  function recalcSpacing() {
+    var width = channels.width()
+      , frame = 218
+      , count = parseInt(width / (frame + 10))
+      , excess = parseInt((width - (frame * count)) / count);
+
+    $("#margin").text(".messages li {margin-right: "+excess+"px}");
+    return excess;
+  }
 
   function beginRecord(cb) {
     var channel = channels.find('.channel.active')

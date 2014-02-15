@@ -150,7 +150,7 @@ $(document).ready(function() {
 
   function recalcSpacing() {
     var width = channels.width()
-      , frame = 218
+      , frame = 202
       , count = parseInt(width / (frame + 10))
       , excess = parseInt((width - (frame * count)) / count);
 

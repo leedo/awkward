@@ -314,7 +314,13 @@ $(document).ready(function() {
         messages.prepend(new_msg);
       }
       else {
-        messages.find('li.input').before(new_msg);
+        var slider = $('<li/>',{'class':'slider'});
+        var last = messages.find('li.input');
+        last.before(slider);
+        slider.on("transitionend", function() {
+          slider.replaceWith(new_msg);
+        });
+        slider.width(last.outerWidth() + 10); // + 10 for margin
       }
     });
   }

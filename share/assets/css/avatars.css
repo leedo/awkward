@@ -31,6 +31,19 @@ body {
   overflow: auto;
   background: #fff;
 }
+.messages li.slider {
+  background: none;
+  box-shadow: none;
+  border: none;
+  width: 0;
+  padding: 0;
+  margin: 0;
+  -webkit-transition: 1s width;
+  -moz-transition: 1s width;
+  -ms-transition: 1s width;
+  -o-transition: 1s width;
+  transition: 1s width;
+}
 .messages li.self {
   background-color: #FFFCF0;
 }
@@ -86,15 +99,15 @@ body {
   background: #eee;
 }
 li.event {
-clear: both;
-float: none;
-width: auto;
-background: none;
-box-shadow: none;
-border-bottom: 1px solid #ccc;
-height: 13px;
-overflow: visible;
-padding: 0;
+  clear: both;
+  float: none;
+  width: auto;
+  background: none;
+  box-shadow: none;
+  border-bottom: 1px solid #ccc;
+  height: 13px;
+  overflow: visible;
+  padding: 0;
 }
 li.event span {
   background: #eee;

@@ -145,6 +145,15 @@ $(document).ready(function() {
     resizing = setTimeout(resizingScroll, 200);
   });
 
+  $(window).on("focus", function() {
+    var channel = channels.find('.channel');
+    if (channel.length) {
+      channel.find("li.input input").focus();
+      return;
+    }
+    $('#channel').focus();
+  });
+
   recalcSpacing();
   start(); // get ID and open WS
 

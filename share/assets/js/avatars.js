@@ -158,12 +158,17 @@ $(document).ready(function() {
   start(); // get ID and open WS
 
   function recalcSpacing() {
-    var width = channels.width()
+    var width = channels.width() - 5
       , frame = 200
       , count = parseInt(width / (frame + 10))
-      , excess = parseInt((width - (frame * count)) / count);
+      , excess = width - (frame * count);
 
-    $("#margin").text(".messages li {margin-right: "+excess+"px}");
+    var space = parseInt((excess + (excess / (count - 1))) / count);
+
+    $("#margin").text(
+      ".messages li {margin-left:"+space+"px}" +
+      ".messages {margin-left:-"+space+"px}"
+    );
     return excess;
   }
 

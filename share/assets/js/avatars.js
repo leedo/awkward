@@ -50,8 +50,11 @@ $(document).ready(function() {
         return;
       }
 
-      var chan = channels.find('.active').attr('data-chan')
-        , msg = $(this).val();
+      var input = $(this)
+        , chan = channels.find('.active').attr('data-chan')
+        , msg = input.val();
+
+      input.attr("disabled", "disabled");
 
       beginRecord(function(frames,w,h) {
         var data = {
@@ -67,11 +70,14 @@ $(document).ready(function() {
           url: "/say",
           type: "POST", 
           data: data,
-          dataType: "json"
+          dataType: "json",
+          complete: function() {
+            input.val('');
+            input.removeAttr("disabled");
+            input.focus();
+          }
         });
       });
-
-      $(this).val('');
     }
   });
 

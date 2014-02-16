@@ -147,11 +147,14 @@ li.event span {
   line-height: 16px;
   float: right;
   font-weight: bold;
-  color: #fff;
   opacity: 0;
 }
 #nav li:hover button.close {
+  color: #428bca;
   opacity: 0.8;
+}
+#nav li.active:hover button.close {
+  color: #fff;
 }
 #recorder {
   display: none;

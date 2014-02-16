@@ -144,9 +144,9 @@ $(document).ready(function() {
     xhr.send(fd);
   });
 
-  channels.on("mouseenter", "img", function() {
+  channels.on("mouseenter", ".messages > li.msg", function() {
     share = share.remove();
-    $(this).parent("li").append(share);
+    $(this).append(share);
   });
 
   $('#mobile-menu').on('click', function() {
@@ -341,6 +341,7 @@ $(document).ready(function() {
       , stream = null;
 
     var new_msg = $('<li/>', {
+      'class': 'msg',
       'id': 'msg-'+message.id,
       'data-user': message.from
     });

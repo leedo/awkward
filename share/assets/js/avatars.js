@@ -93,7 +93,19 @@ $(document).ready(function() {
   });
 
   channels.on("click", "#imgur", function() {
-    var img = $(this).parents("li").find("> img");
+    var li = $(this).parents("li")
+      , anchor = li.find("> a.anchor")
+      , img = li.find("> img");
+
+    anchor.popover("destroy");
+    anchor.popover({
+      placement: "bottom",
+      trigger: "manual",
+      content: "uploading…",
+      container: li
+    });
+    anchor.popover("show");
+
     var b64 = img.attr('src').replace(/^data:image\/gif;base64,/, "")
       , arr = base64DecToArr(b64)
       , blob = new Blob([arr], {type: "image/gif"})
@@ -106,7 +118,27 @@ $(document).ready(function() {
 
     xhr.onload = function() {
       var res = JSON.parse(xhr.responseText);
-      alert(res.upload.links.original);
+      var url = res.upload.links.original;
+      var span = $('<span/>');
+      var link = $('<a/>', {href: url}).text(url);
+      var close = $('<button/>', {
+        type: "button",
+        'class': "close",
+        'aria-hidden':"true",
+        style: "display:inline-block;float:none;padding-left:5px"
+      }).html("×");
+      close.on("click", function() {anchor.popover("destroy")});
+      span.append(link).append(close);
+
+      anchor.popover("destroy");
+      anchor.popover({
+        placement: "bottom",
+        trigger: "manual",
+        container: li,
+        html: true,
+        content: span
+      });
+      anchor.popover("show");
     };
 
     xhr.send(fd);
@@ -348,6 +380,7 @@ $(document).ready(function() {
 
     new_msg.prepend(placeholder);
     new_msg.append($('<span/>', {'class':'body'}).text(message.msg));
+    new_msg.prepend($('<a/>', {'class':'anchor', name: message.id}));
 
     maybeScroll(function(scroll) {
       if (message['backlog']) {

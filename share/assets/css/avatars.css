@@ -41,6 +41,11 @@ h1 {
   margin-top: 5px;
   margin-bottom: 5px;
 }
+.messages > li > a.anchor {
+  position: absolute;
+  top: 20px;
+  right: 12px;
+}
 .messages > li > span.body {
   display: block;
   margin: 5px 0 0 0;

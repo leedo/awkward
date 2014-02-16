@@ -54,11 +54,11 @@ h1 {
   border: none;
   width: 0;
   padding: 0;
-  -webkit-transition: 1s width;
-  -moz-transition: 1s width;
-  -ms-transition: 1s width;
-  -o-transition: 1s width;
-  transition: 1s width;
+  -webkit-transition: 0.5s width;
+  -moz-transition: 0.5s width;
+  -ms-transition: 0.5s width;
+  -o-transition: 0.5s width;
+  transition: 0.5s width;
 }
 .messages .form-control {
   margin-top: 6px;
@@ -102,6 +102,7 @@ h1 {
 }
 #right-gutter {
   position: absolute;
+  overflow: hidden;
   top: 0px;
   right: 0px;
   bottom: 0px;

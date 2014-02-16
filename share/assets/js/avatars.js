@@ -165,12 +165,12 @@ $(document).ready(function() {
   start(); // get ID and open WS
 
   function recalcSpacing() {
-    var width = channels.width() - 5
+    var width = channels.width() - 10
       , frame = 200
       , count = parseInt(width / (frame + 10))
       , excess = width - (frame * count);
 
-    var space = parseInt((excess + (excess / (count - 1))) / count);
+    var space = (excess + (excess / (count - 1))) / count;
 
     $("#margin").text(
       ".messages>li {margin-left:"+space+"px}" +

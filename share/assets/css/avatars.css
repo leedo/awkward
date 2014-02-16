@@ -31,7 +31,7 @@ h1 {
   box-shadow: 1px 0 3px rgba(0,0,0,0.5);
   z-index: 999;
 }
-.messages li {
+.messages > li {
   position: relative;
   padding: 0px;
   float: left;
@@ -41,7 +41,7 @@ h1 {
   margin-top: 5px;
   margin-bottom: 5px;
 }
-.messages li span.body {
+.messages > li > span.body {
   display: block;
   margin: 5px 0 0 0;
   color: #666;
@@ -49,7 +49,7 @@ h1 {
   line-height: 1.2em;
   overflow: auto;
 }
-.messages li.slider {
+.messages > li.slider {
   background: none;
   border: none;
   width: 0;
@@ -68,11 +68,10 @@ h1 {
   height: auto;
   margin: 0;
   display: block;
-  cursor: pointer;
   border: 1px solid #fff;
   box-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
-.messages li.disconnected img {
+.messages > li.disconnected img {
   -webkit-filter: grayscale(100%);
 }
 .messages {
@@ -220,6 +219,32 @@ div.placeholder {
   background-repeat: no-repeat;
   border: 1px solid #fff;
   box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+.messages li:hover ul#share {
+  display: block;
+}
+
+ul#share {
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  background: rgba(0,0,0,0.35);
+}
+
+ul#share li {
+  float: left;
+  padding: 5px;
+  margin: 0;
+  cursor: pointer;
+  color: #fff;
+}
+ul#share li:hover {
+  text-shadow: 0 1px 3px rgba(0,0,0,0.25);
 }
 
 @media (max-width: 568px) {

@@ -3,7 +3,8 @@ $(document).ready(function() {
     , own_stream = null
     , played_audio = false
     , channels = $('#channels')
-    , nav = $('#nav');
+    , nav = $('#nav')
+    , share = $('#share');
 
   if ("getUserMedia" in navigator) {
     navigator.getUserMedia(
@@ -85,8 +86,9 @@ $(document).ready(function() {
     }
   });
 
-  channels.on("click", "img", function() {
-    var b64 = $(this).attr('src').replace(/^data:image\/gif;base64,/, "")
+  channels.on("click", "#imgur", function() {
+    var img = $(this).parents("li").find("> img");
+    var b64 = img.attr('src').replace(/^data:image\/gif;base64,/, "")
       , arr = base64DecToArr(b64)
       , blob = new Blob([arr], {type: "image/gif"})
       , fd = new FormData()
@@ -102,6 +104,11 @@ $(document).ready(function() {
     };
 
     xhr.send(fd);
+  });
+
+  channels.on("mouseenter", "img", function() {
+    share = share.remove();
+    $(this).parent("li").append(share);
   });
 
   $('#mobile-menu').on('click', function() {
@@ -166,7 +173,7 @@ $(document).ready(function() {
     var space = parseInt((excess + (excess / (count - 1))) / count);
 
     $("#margin").text(
-      ".messages li {margin-left:"+space+"px}" +
+      ".messages>li {margin-left:"+space+"px}" +
       ".messages {margin-left:-"+space+"px}"
     );
     return excess;
@@ -318,7 +325,6 @@ $(document).ready(function() {
       success: function(frames) {
         var img = $('<img/>',{
           src: "data:image/gif;base64," + frames,
-          title: "click for sharable URL",
           width: width,
           height: height
         });

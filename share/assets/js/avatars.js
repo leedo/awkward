@@ -174,9 +174,12 @@ $(document).ready(function() {
     var width = channels.width() - 10
       , frame = 200
       , count = parseInt(width / (frame + 10))
-      , excess = width - (frame * count);
+      , space = 10;
 
-    var space = (excess + (excess / (count - 1))) / count;
+    if (count > 1) {
+      var excess = width - (frame * count);
+      space = (excess + (excess / (count - 1))) / count;
+    }
 
     $("#margin").text(
       ".messages>li {margin-left:"+space+"px}" +

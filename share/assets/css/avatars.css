@@ -24,7 +24,6 @@ h1 {
   bottom: 0px;
   left: 0px;
   right: 150px;
-  border-left: 1px solid #fff;
   border-right: 1px solid #fff;
   background: #efefef;
   padding: 0 0 0 10px;
@@ -100,7 +99,6 @@ h1 {
 }
 .channel {
   display: none;
-  border-top: 1px solid #fff;
 }
 .channel.active {
   display: block;
@@ -160,22 +158,6 @@ li.event span {
 }
 #nav li.active:hover button.close {
   color: #fff;
-}
-#recorder {
-  display: none;
-  width: 492px;
-  z-index: 999;
-  position: absolute;
-  top: 15px;
-  left: 50%;
-  margin-left: -246px;
-  background: #fff;
-  border: 1px solid #eee;
-  box-shadow: 0 0 3px rgba(0,0,0,0.5);
-  padding: 5px;
-}
-#recorder video {
-  width: 480px;
 }
 li.input progress {
   height: 2px;

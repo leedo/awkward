@@ -18,12 +18,16 @@ builder {
     content_type => ["text/plain", "text/css", "text/javascript", "text/html", "application/javascript"],
     vary_user_agent => 1;
 
-  enable "Plack::Middleware::Expires",
-    content_type => ["text/javascript", "application/javascript", "text/css", "text/html"],
-    expires => "M3600";
+  mount "/assets" => builder {
+    enable "Plack::Middleware::Expires",
+      content_type => ["text/javascript", "application/javascript", "text/css", "text/html"],
+      expires => "M3600";
 
-  enable "Plack::Middleware::Static",
-    path => sub {s!^/assets/!!}, root => "share/assets";
+    enable "Plack::Middleware::Static",
+      path => "/", root => "share/assets";
+
+    sub { [404, ["Content-Type", "text/plain"], ["not found"]] };
+  };
 
   mount "/" => sub { [301, ["Location", "/chat/"], ["redirect"]] };
   mount "/chat" => Plack::App::File->new(file => "share/index.html")->to_app;
@@ -33,12 +37,17 @@ builder {
     my ($id) = $env->{PATH_INFO} =~ m{/([^/]+?)\.gif$};
     return sub {
       my $respond = shift;
+      my @h = (
+        "Content-Type", "text/plain",
+        "Expires", "31 December 2037 23:59:59 GMT",
+        "Cache-Control", "max-age=31536000, public",
+      );
       $app->get_image($id, sub {
         if ($_[0]) {
-          $respond->([200, ["Content-Type", "text/plain"], [$_[0]]]);
+          $respond->([200, [@h], [$_[0]]]);
         }
         else {
-          $respond->([404, ["Content-Type", "text/plain"], ["not found"]]);
+          $respond->([404, [@h], ["not found"]]);
         }
       });
     };

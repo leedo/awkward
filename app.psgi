@@ -14,15 +14,7 @@ use warnings;
 my $app = Awkward->new;
 
 builder {
-  enable "Plack::Middleware::Deflater",
-    content_type => ["text/plain", "text/css", "text/javascript", "text/html", "application/javascript"],
-    vary_user_agent => 1;
-
   mount "/assets" => builder {
-    enable "Plack::Middleware::Expires",
-      content_type => ["text/javascript", "application/javascript", "text/css", "text/html"],
-      expires => "M3600";
-
     enable "Plack::Middleware::Static",
       path => "/", root => "share/assets";
 

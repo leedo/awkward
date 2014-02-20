@@ -51,9 +51,12 @@ $(document).ready(function() {
       }
 
       var input = $(this)
+        , overlay = $('<div/>', {'class':'overlay'})
         , chan = channels.find('.active').attr('data-chan')
         , msg = input.val();
 
+      $('body').prepend(overlay);
+      overlay.addClass('on');
       input.attr("disabled", "disabled");
 
       beginRecord(function(frames,w,h) {
@@ -75,6 +78,10 @@ $(document).ready(function() {
             input.val('');
             input.removeAttr("disabled");
             input.focus();
+            overlay.on('transitionend', function() {
+              overlay.remove();
+            });
+            overlay.removeClass('on');
           }
         });
       });

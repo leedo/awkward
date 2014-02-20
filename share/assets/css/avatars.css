@@ -28,7 +28,6 @@ h1 {
   background: #efefef;
   padding: 0 0 0 10px;
   box-shadow: 1px 0 3px rgba(0,0,0,0.5);
-  z-index: 999;
 }
 .messages > li {
   position: relative;
@@ -195,6 +194,7 @@ li.input {
   background-color: transparent;
   box-shadow: none;
   border: 1px solid transparent;
+  z-index: 999;
 }
 li.input div.placeholder {
   background-image: none;
@@ -289,4 +289,20 @@ ul#share li:hover {
   body > a {
     display: none;
   }
+}
+
+div.overlay {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  background: rgba(0,0,0,0.5);
+  z-index: 999;
+  opacity: 0;
+  -webkit-transition: 0.5s opacity;
+}
+
+div.overlay.on {
+  opacity: 1;
 }

@@ -3,6 +3,7 @@ $(document).ready(function() {
     , own_stream = null
     , played_audio = false
     , channels = $('#channels')
+    , video = $('<video/>', {autoplay:"autoplay"})
     , nav = $('#nav')
     , share = $('#share');
 
@@ -18,6 +19,7 @@ $(document).ready(function() {
       },
       function(s) {
         own_stream = s;
+        video.attr('src', URL.createObjectURL(own_stream));
       },
       function(e) {
         console.log("error getting video stream: " + e);
@@ -231,12 +233,10 @@ $(document).ready(function() {
     var channel = channels.find('.channel.active')
       , input = channel.find('li.input')
       , placeholder = input.find('.placeholder')
-      , video = $('<video/>', {autoplay:"autoplay"})
+      , video = input.find('video')
       , progress = $('<progress/>', {value: 0, max: 100});
 
-    video.width(placeholder.width());
-    video.height(placeholder.height());
-    placeholder.append(video).append(progress);
+    placeholder.append(progress);
 
     var countdown = function(count) {
       if (count) {
@@ -250,12 +250,7 @@ $(document).ready(function() {
       }
     };
 
-    video.on("loadeddata", function() {
-      video.off("loadeddata");
-      countdown(10);
-    });
-
-    video.attr('src', URL.createObjectURL(own_stream));
+    countdown(10);
   }
 
   function recordVideo(video, progress, cb) {
@@ -279,8 +274,6 @@ $(document).ready(function() {
         setTimeout(frame, 100, count - 1);
       }
       else {
-        v.pause();
-        video.remove();
         progress.remove();
         cb(frames, c.width, c.height);
       }
@@ -507,6 +500,12 @@ $(document).ready(function() {
     window.history.replaceState({}, "", "#/" +encodeURIComponent(channel.attr('data-name')));
     $('#channel-title').text(channel.attr('data-name'));
     channel.find("li.input input").focus();
+    var placeholder = channel.find(".placeholder");
+    video = video.remove();
+    video.width(placeholder.width());
+    video.height(placeholder.height());
+    placeholder.append(video);
+    video.get(0).play();
   }
 
   function renderChannel(name, id) {

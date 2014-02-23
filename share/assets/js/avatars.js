@@ -106,12 +106,15 @@ $(document).ready(function() {
       , anchor = li.find("> a.anchor")
       , img = li.find("> img");
 
+    if (li.attr('data-imgur-url')) {
+      return showImgurPopover(anchor, li.attr('data-imgur-url'));
+    }
+
     anchor.popover("destroy");
     anchor.popover({
       placement: "bottom",
       trigger: "manual",
       content: "uploading…",
-      container: li
     });
     anchor.popover("show");
 
@@ -128,30 +131,34 @@ $(document).ready(function() {
     xhr.onload = function() {
       var res = JSON.parse(xhr.responseText);
       var url = res.upload.links.original;
-      var span = $('<span/>');
-      var link = $('<a/>', {href: url}).text(url);
-      var close = $('<button/>', {
-        type: "button",
-        'class': "close",
-        'aria-hidden':"true",
-        style: "display:inline-block;float:none;padding-left:5px"
-      }).html("×");
-      close.on("click", function() {anchor.popover("destroy")});
-      span.append(link).append(close);
-
-      anchor.popover("destroy");
-      anchor.popover({
-        placement: "bottom",
-        trigger: "manual",
-        container: li,
-        html: true,
-        content: span
-      });
-      anchor.popover("show");
+      li.attr("data-imgur-url", url);
+      showImgurPopover(anchor, url);
     };
 
     xhr.send(fd);
   });
+
+  function showImgurPopover(elem, url) {
+    var span = $('<span/>');
+    var link = $('<a/>', {href: url}).text(url);
+    var close = $('<button/>', {
+      type: "button",
+      'class': "close",
+      'aria-hidden':"true",
+      style: "display:inline-block;float:none;padding-left:5px"
+    }).html("×");
+    close.on("click", function() {elem.popover("destroy")});
+    span.append(link).append(close);
+
+    elem.popover("destroy");
+    elem.popover({
+      placement: "bottom",
+      trigger: "manual",
+      html: true,
+      content: span
+    });
+    elem.popover("show");
+  }
 
   channels.on("mouseenter", ".messages > li.msg", function() {
     share = share.remove();

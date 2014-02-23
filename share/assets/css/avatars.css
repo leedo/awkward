@@ -159,27 +159,28 @@ li.event span {
   color: #fff;
 }
 li.input progress {
-  height: 2px;
+  height: 4px;
   display: block;
   border: none;
-  background: transparent;
+  background: rgba(255,255,255,0.25);
   width: 100%;
   position: absolute;
   bottom: 0px;
   left: 0px;
-  color: #ccc;
+  color: #fff;
 }
 li.input progress.on {
   color: red;
+  background: rgba(255,255,255,0.25);
 }
 li.input progress.on::-webkit-progress-value {
   background: red;
 }
 li.input progress::-webkit-progress-value {
-  background: #ccc;
+  background: #fff;
 }
 li.input progress::-webkit-progress-bar {
-  background: transparent;
+  background: rgba(255,255,255,0.25);
 }
 #recorder span.countdown {
   position: absolute;

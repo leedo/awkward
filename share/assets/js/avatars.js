@@ -270,7 +270,6 @@ $(document).ready(function() {
 
     c.width = 200
     c.height = parseInt(200 / aspect);
-    progress.removeClass('down');
 
     var frames = [];
     var frame = function(count) {

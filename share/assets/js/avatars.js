@@ -271,6 +271,9 @@ $(document).ready(function() {
     c.width = 200
     c.height = parseInt(200 / aspect);
 
+    ctx.translate(c.width, 0);
+    ctx.scale(-1, 1);
+
     var frames = [];
     var frame = function(count) {
       progress.attr('value', 100 - ((10 - count)*10));

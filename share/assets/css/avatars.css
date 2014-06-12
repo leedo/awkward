@@ -213,6 +213,13 @@ div.placeholder {
   box-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 
+div.placeholder video {
+  -webkit-transform:rotateY(180deg);
+  -moz-transform:rotateY(180deg);
+  -ms-transform:rotateY(180deg);
+  transform: rotateY(180deg);
+}
+
 .messages li:hover ul#share {
   display: block;
 }

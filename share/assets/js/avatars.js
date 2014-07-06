@@ -281,7 +281,7 @@ $(document).ready(function() {
       end.css({left: (range.width() - end.width()) + "px"});
 
       var offset = range.offset().left;
-      var segment_size = parseInt(range.width() / (frames.length - 1));
+      var segment_size = parseInt(range.width() / frames.length);
       pos.width(segment_size);
 
       $('.range-start,.range-end').on('mousedown', function(e) {
@@ -297,7 +297,7 @@ $(document).ready(function() {
             'width': end.position().left - start.position().left
           });
           frames_start = parseInt(start.position().left / segment_size);
-          frames_end = parseInt(end.position().left / segment_size);
+          frames_end = parseInt(end.position().left / segment_size) - 1;
         });
         $(document).on('mouseup', function(e) {
           $(document).off('mousemove').off('mouseup');
@@ -320,7 +320,10 @@ $(document).ready(function() {
           fwd = true;
           index++;
         }
-        if (!imgs[index]) return;
+        if (!imgs[index]) {
+          console.log(imgs, index, fwd);
+          return;
+        }
         ctx.drawImage(imgs[index], 0, 0);
         pos.css({left: (index * segment_size) + "px"});
         setTimeout(play, 100, fwd ? index + 1 : index - 1);

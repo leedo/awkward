@@ -296,8 +296,8 @@ $(document).ready(function() {
             'left': start.position().left,
             'width': end.position().left - start.position().left
           });
-          frames_start = parseInt(start.position().left / segment_size);
-          frames_end = parseInt(end.position().left / segment_size) - 1;
+          frames_start = Math.max(0, parseInt(start.position().left / segment_size));
+          frames_end = Math.min(frames.length - 1, parseInt(end.position().left / segment_size));
         });
         $(document).on('mouseup', function(e) {
           $(document).off('mousemove').off('mouseup');
@@ -322,6 +322,7 @@ $(document).ready(function() {
         }
         if (!imgs[index]) {
           console.log(imgs, index, fwd);
+          setTimeout(play, 100, fwd ? index + 1 : index - 1);
           return;
         }
         ctx.drawImage(imgs[index], 0, 0);

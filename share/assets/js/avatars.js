@@ -320,6 +320,7 @@ $(document).ready(function() {
           fwd = true;
           index++;
         }
+        if (!imgs[index]) return;
         ctx.drawImage(imgs[index], 0, 0);
         pos.css({left: (index * segment_size) + "px"});
         setTimeout(play, 100, fwd ? index + 1 : index - 1);

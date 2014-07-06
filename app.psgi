@@ -26,7 +26,7 @@ builder {
 
   mount "/image" => sub {
     my $env = shift;
-    my ($id) = $env->{PATH_INFO} =~ m{/([^/]+?)\.gif$};
+    my ($id) = $env->{PATH_INFO} =~ m{/([^/]+?)\.txt$};
     return sub {
       my $respond = shift;
       my @h = (

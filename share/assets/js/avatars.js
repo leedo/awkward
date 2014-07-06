@@ -45,26 +45,25 @@ $(document).ready(function() {
     focusChannel(li.attr('data-chan'));
   });
 
-  $('#channels').on("keypress", 'li.input input', function(e) {
-    if (e.keyCode == 13) {
+  $('#channels').on("click", 'li.input button.record', function(e) {
       if (!own_stream) {
         alert("Must allow video capture");
         return;
       }
 
-      var input = $(this)
-        , overlay = $('<div/>', {'class':'overlay'})
-        , chan = channels.find('.active').attr('data-chan')
-        , msg = input.val();
+      var button = $(this)
+        , chan = channels.find('.active').attr('data-chan');
 
-      $('body').prepend(overlay);
-      overlay.addClass('on');
-      input.attr("disabled", "disabled");
+      button.hide();
 
-      beginRecord(function(frames,w,h) {
+      record(edit(function(frames,w,h) {
+        if (!frames) {
+          button.show();
+          return;
+        }
         var data = {
           channel: chan,
-          msg: msg,
+          msg: "",
           from: own_id
         };
         if (frames) {
@@ -77,17 +76,10 @@ $(document).ready(function() {
           data: data,
           dataType: "json",
           complete: function() {
-            input.val('');
-            input.removeAttr("disabled");
-            input.focus();
-            overlay.on('transitionend', function() {
-              overlay.remove();
-            });
-            overlay.removeClass('on');
+            button.show();
           }
         });
-      });
-    }
+      }));
   });
 
   $("#channel").on("keypress", function(e) {
@@ -236,7 +228,108 @@ $(document).ready(function() {
     return excess;
   }
 
-  function beginRecord(cb) {
+  function edit(cb) {
+    return function(frames,w,h) {
+      var channel = channels.find('.channel.active')
+        , input = channel.find('li.input')
+        , placeholder = input.find('.placeholder')
+        , range = $('<div/>', {'class':'range'})
+        , pos = $('<div/>', {'class':'range-pos'})
+        , fill = $('<div/>', {'class':'range-fill'})
+        , start = $('<div/>', {'class':'range-start'})
+        , end = $('<div/>', {'class':'range-end'})
+        , c = document.createElement('canvas')
+        , ctx = c.getContext('2d')
+        , frames_start = 0
+        , frames_end = frames.length - 1;
+
+      var submit = $('<button/>', {
+        'type': 'button',
+        'class': 'btn btn-success'
+      }).html("Submit");
+
+      var cancel = $('<button/>', {
+        'type': 'button',
+        'class': 'btn btn-default'
+      }).html("Cancel");
+
+      function done() {
+        placeholder.html(video);
+        video.get(0).play();
+        cancel.remove();
+        submit.remove();
+      }
+
+      cancel.on("click", function() { 
+        done();
+        cb();
+      });
+
+      submit.on("click", function() {
+        done();
+        cb(frames.slice(frames_start, frames_end), w, h);
+      });
+
+      input.append(submit, cancel);
+
+      c.width = w;
+      c.height = h;
+      video.replaceWith(c);
+
+      range.append(fill, pos, start, end);
+      placeholder.append(range);
+      end.css({left: (range.width() - end.width()) + "px"});
+
+      var offset = range.offset().left;
+      var segment_size = parseInt(range.width() / (frames.length - 1));
+      pos.width(segment_size);
+
+      $('.range-start,.range-end').on('mousedown', function(e) {
+        var el = $(this);
+        $(document).on('mousemove', function(e) {
+          var left = e.pageX - offset - 5;
+          if (left < 0 || left > w - 10)
+            return;
+
+          el.css({left: left + "px"});
+          fill.css({
+            'left': start.position().left,
+            'width': end.position().left - start.position().left
+          });
+          frames_start = parseInt(start.position().left / segment_size);
+          frames_end = parseInt(end.position().left / segment_size);
+        });
+        $(document).on('mouseup', function(e) {
+          $(document).off('mousemove').off('mouseup');
+        });
+      });
+
+      var imgs = $.map(frames, function(frame) {
+        var img = new Image();
+        img.src = frame;
+        return img;
+      });
+
+      var fwd = true;
+      function play(index) {
+        if (fwd && index > frames_end) {
+          fwd = false;
+          index--;
+        }
+        else if (!fwd && index < frames_start) {
+          fwd = true;
+          index++;
+        }
+        ctx.drawImage(imgs[index], 0, 0);
+        pos.css({left: (index * segment_size) + "px"});
+        setTimeout(play, 100, fwd ? index + 1 : index - 1);
+      }
+
+      play(0);
+    };
+  }
+
+  function record(cb) {
     var channel = channels.find('.channel.active')
       , input = channel.find('li.input')
       , placeholder = input.find('.placeholder')
@@ -253,14 +346,14 @@ $(document).ready(function() {
       else {
         progress.attr('value', 200);
         progress.addClass('on');
-        setTimeout(recordVideo, 150, video, progress, cb);
+        setTimeout(getframes, 150, video, progress, cb);
       }
     };
 
     countdown(10);
   }
 
-  function recordVideo(video, progress, cb) {
+  function getframes(video, progress, cb) {
     var v = video.get(0)
       , w = video.width()
       , h = video.height()
@@ -275,8 +368,9 @@ $(document).ready(function() {
     ctx.scale(-1, 1);
 
     var frames = [];
+    var limit = 25;
     var frame = function(count) {
-      progress.attr('value', 100 - ((10 - count)*10));
+      progress.attr('value', 100 - (((limit - count) / limit) * 100));
       ctx.drawImage(v, 0, 0, c.width, c.height);
       frames.push(c.toDataURL("image/jpeg", 0.7));
       if (count > 0) {
@@ -288,7 +382,7 @@ $(document).ready(function() {
       }
     };
 
-    frame(10);
+    frame(limit);
   }
 
   function appendEvent(event) {
@@ -371,7 +465,7 @@ $(document).ready(function() {
     });
 
     $.ajax({
-      url: "/image/"+message.id+".gif",
+      url: "/image/"+message.id+".txt",
       dataType: "text",
       success: function(frames) {
         var img = $('<img/>',{
@@ -532,11 +626,10 @@ $(document).ready(function() {
     });
     var li = $('<li/>',{'class':'input'});
     var placeholder = $('<div/>', {'class':'placeholder'});
-    var input = $('<input/>', {
-      "type": "text",
-      "placeholder":"your message",
-      "class": "form-control"
-    });
+    var input = $('<button/>', {
+      "type": "button",
+      "class": "record btn btn-danger"
+    }).html("Record");
     li.append(placeholder);
     li.append(input);
     ol.append(li);

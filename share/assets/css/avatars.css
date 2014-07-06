@@ -63,7 +63,7 @@ h1 {
   -o-transition: 0.5s width;
   transition: 0.5s width;
 }
-.messages .form-control {
+.messages .btn {
   margin-top: 6px;
 }
 .messages img {
@@ -211,6 +211,7 @@ div.placeholder {
   background-repeat: no-repeat;
   border: 1px solid #fff;
   box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  overflow: hidden;
 }
 
 div.placeholder video {
@@ -313,4 +314,49 @@ div.overlay {
 
 div.overlay.on {
   opacity: 1;
+}
+
+div.range {
+  position: absolute;
+  background: #fff;
+  height: 4px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+}
+
+div.range-fill {
+  position: absolute;
+  background: #ccc;
+  height: 4px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+}
+
+div.range-end,
+div.range-start {
+  position: absolute;
+  left: -1px;
+  bottom: 0px;
+  height: 12px;
+  width: 10px;
+  background: #ccc;
+  cursor: ew-resize;
+  border: 1px solid #fff;
+  border-bottom: none;
+  box-shadow: 0 0 3px rgba(0,0,0,0.5);
+}
+div.range-pos {
+  width: 2px;
+  position: absolute;
+  left: 0px;
+  background-color: #999;
+  height: 4px;
+  -webkit-transition: left 1s linear;
+  transition: left .1s linear;
+}
+div.range-pos.no-ani {
+  -webkit-transition: none;
+  transition: none;
 }

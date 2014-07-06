@@ -66,6 +66,9 @@ h1 {
 .messages .btn {
   margin-top: 6px;
 }
+.messages .btn + .btn {
+  margin-left: 6px;
+}
 .messages img {
   width: 200px;
   height: auto;

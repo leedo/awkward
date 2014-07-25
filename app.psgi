@@ -36,10 +36,10 @@ builder {
       );
       $app->get_image($id, sub {
         if ($_[0]) {
-          $respond->([200, [@h], [$_[0]]]);
+          $respond->([200, [@h, "Content-Length", length($_[0])], [$_[0]]]);
         }
         else {
-          $respond->([404, [@h], ["not found"]]);
+          $respond->([404, [@h, "Content-Length", "9"], ["not found"]]);
         }
       });
     };

@@ -228,8 +228,7 @@ div.placeholder video {
   display: block;
 }
 
-ul#share {
-  display: none;
+ul#share, ul#controls {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -239,6 +238,11 @@ ul#share {
   background: rgba(0,0,0,0.35);
 }
 
+ul#share {
+  display: block;
+}
+
+ul#controls li,
 ul#share li {
   float: left;
   padding: 5px;
@@ -246,6 +250,8 @@ ul#share li {
   cursor: pointer;
   color: #fff;
 }
+
+ul#controls li:hover,
 ul#share li:hover {
   text-shadow: 0 1px 3px rgba(0,0,0,0.25);
 }

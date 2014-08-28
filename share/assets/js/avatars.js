@@ -241,7 +241,8 @@ $(document).ready(function() {
         , c = document.createElement('canvas')
         , ctx = c.getContext('2d')
         , frames_start = 0
-        , frames_end = frames.length - 1;
+        , frames_end = frames.length - 1
+        , imgs = images(frames)
 
       var submit = $('<button/>', {
         'type': 'button',
@@ -253,12 +254,33 @@ $(document).ready(function() {
         'class': 'btn btn-default'
       }).html("Cancel");
 
+      var controls = $('<ul/>', {
+        'id': 'controls'
+      }).append(
+        $('<li/>', {"class":"flip"}).html("⇄")
+      );
+
       function done() {
         placeholder.html(video);
         video.get(0).play();
         cancel.remove();
         submit.remove();
+        controls.remove();
       }
+
+      controls.on("click", "li.flip", function() {
+        stop();
+        ctx.translate(c.width, 0);
+        ctx.scale(-1, 1);
+        for (var i=0; i< frames.length; i++) {
+          ctx.drawImage(imgs[i], 0, 0, c.width, c.height);
+          frames[i] = c.toDataURL("image/jpeg", 0.7);
+        }
+        imgs = images(frames);
+        ctx.translate(c.width, 0);
+        ctx.scale(-1, 1);
+        play(0);
+      });
 
       cancel.on("click", function() { 
         done();
@@ -270,7 +292,7 @@ $(document).ready(function() {
         cb(frames.slice(frames_start, frames_end), w, h);
       });
 
-      input.append(submit, cancel);
+      input.append(submit, cancel, controls);
 
       c.width = w;
       c.height = h;
@@ -304,13 +326,16 @@ $(document).ready(function() {
         });
       });
 
-      var imgs = $.map(frames, function(frame) {
-        var img = new Image();
-        img.src = frame;
-        return img;
-      });
+      function images (frames) {
+        return $.map(frames, function(frame) {
+          var img = new Image();
+          img.src = frame;
+          return img;
+        });
+      }
 
-      var fwd = true;
+      var timer = null
+        , fwd = true;
       function play(index) {
         if (fwd && index > frames_end) {
           fwd = false;
@@ -322,12 +347,16 @@ $(document).ready(function() {
         }
         if (!imgs[index]) {
           console.log(imgs, index, fwd);
-          setTimeout(play, 100, fwd ? index + 1 : index - 1);
+          timer = setTimeout(play, 100, fwd ? index + 1 : index - 1);
           return;
         }
         ctx.drawImage(imgs[index], 0, 0);
         pos.css({left: (index * segment_size) + "px"});
-        setTimeout(play, 100, fwd ? index + 1 : index - 1);
+        timer = setTimeout(play, 100, fwd ? index + 1 : index - 1);
+      }
+
+      function stop() {
+        clearTimeout(timer);
       }
 
       play(0);

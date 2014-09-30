@@ -238,6 +238,7 @@ $(document).ready(function() {
         , fill = $('<div/>', {'class':'range-fill'})
         , start = $('<div/>', {'class':'range-start'})
         , end = $('<div/>', {'class':'range-end'})
+        , caption = ""
         , c = document.createElement('canvas')
         , ctx = c.getContext('2d')
         , frames_start = 0
@@ -258,6 +259,8 @@ $(document).ready(function() {
         'id': 'controls'
       }).append(
         $('<li/>', {"class":"flip"}).html("⇄")
+      ).append(
+        $('<li/>', {"class":"caption"}).html("T").css("font-family","serif")
       );
 
       function done() {
@@ -268,18 +271,32 @@ $(document).ready(function() {
         controls.remove();
       }
 
-      controls.on("click", "li.flip", function() {
+      function reframe(quality, flatten) {
         stop();
-        ctx.translate(c.width, 0);
-        ctx.scale(-1, 1);
+        ctx.fillStyle = "#fff";
+        ctx.font = "20px sans-serif";
+        ctx.textAlign = "center";
         for (var i=0; i< frames.length; i++) {
           ctx.drawImage(imgs[i], 0, 0, c.width, c.height);
-          frames[i] = c.toDataURL("image/jpeg", 0.7);
+          if (flatten)
+            ctx.fillText(caption, c.width / 2, c.height - 10);
+          frames[i] = c.toDataURL("image/jpeg", quality);
         }
         imgs = images(frames);
+        play(0);
+      }
+
+      controls.on("click", "li.caption", function() {
+        caption = prompt("Caption");
+        reframe(1.0, false);
+      });
+
+      controls.on("click", "li.flip", function() {
         ctx.translate(c.width, 0);
         ctx.scale(-1, 1);
-        play(0);
+        reframe(1.0, false);
+        ctx.translate(c.width, 0);
+        ctx.scale(-1, 1);
       });
 
       cancel.on("click", function() { 
@@ -289,6 +306,7 @@ $(document).ready(function() {
 
       submit.on("click", function() {
         done();
+        reframe(0.7, true); // compress
         cb(frames.slice(frames_start, frames_end), w, h);
       });
 
@@ -351,6 +369,10 @@ $(document).ready(function() {
           return;
         }
         ctx.drawImage(imgs[index], 0, 0);
+        ctx.fillStyle = "#fff";
+        ctx.font = "20px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(caption, c.width / 2, c.height - 10);
         pos.css({left: (index * segment_size) + "px"});
         timer = setTimeout(play, 100, fwd ? index + 1 : index - 1);
       }
@@ -406,7 +428,7 @@ $(document).ready(function() {
     var frame = function(count) {
       progress.attr('value', 100 - (((limit - count) / limit) * 100));
       ctx.drawImage(v, 0, 0, c.width, c.height);
-      frames.push(c.toDataURL("image/jpeg", 0.7));
+      frames.push(c.toDataURL("image/jpeg", 1.0));
       if (count > 0) {
         setTimeout(frame, 100, count - 1);
       }

@@ -56,14 +56,14 @@ $(document).ready(function() {
 
       button.hide();
 
-      record(edit(function(frames,w,h) {
+      record(edit(function(frames,w,h, caption) {
         if (!frames) {
           button.show();
           return;
         }
         var data = {
           channel: chan,
-          msg: "",
+          msg: caption,
           from: own_id
         };
         if (frames) {
@@ -307,7 +307,7 @@ $(document).ready(function() {
       submit.on("click", function() {
         done();
         reframe(0.7, true); // compress
-        cb(frames.slice(frames_start, frames_end), w, h);
+        cb(frames.slice(frames_start, frames_end), w, h, caption);
       });
 
       input.append(submit, cancel, controls);
@@ -529,6 +529,7 @@ $(document).ready(function() {
           width: width,
           height: height
         });
+        if (message.msg) img.attr("title", message.msg);
         maybeScroll(function(scroll) {
           img.on("load", function() {
             if (scroll) scroll();
@@ -539,7 +540,6 @@ $(document).ready(function() {
     });
 
     new_msg.prepend(placeholder);
-    new_msg.append($('<span/>', {'class':'body'}).text(message.msg));
     new_msg.prepend($('<a/>', {'class':'anchor', name: message.id}));
 
     maybeScroll(function(scroll) {

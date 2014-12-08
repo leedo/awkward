@@ -26,11 +26,11 @@ builder {
 
   mount "/image" => sub {
     my $env = shift;
-    my ($id) = $env->{PATH_INFO} =~ m{/([^/]+?)\.txt$};
+    my ($id) = $env->{PATH_INFO} =~ m{/([^/]+?)\.gif$};
     return sub {
       my $respond = shift;
       my @h = (
-        "Content-Type", "text/plain",
+        "Content-Type", "image/gif",
         "Expires", "31 December 2037 23:59:59 GMT",
         "Cache-Control", "max-age=31536000, public",
       );

@@ -24,7 +24,7 @@ sub make {
     gif_loop => 0,
   }, @frames, reverse @frames[1 .. $#frames -1]);
 
-  return encode_base64 $out;
+  return $out;
 }
 
 1;

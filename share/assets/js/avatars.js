@@ -520,12 +520,16 @@ $(document).ready(function() {
       height: height
     });
 
-    $.ajax({
-      url: "/image/"+message.id+".txt",
-      dataType: "text",
-      success: function(frames) {
+    // use raw XHR interface to get array buffer
+    var req = new XMLHttpRequest();
+    req.open("GET", "/image/"+message.id+".gif", true);
+    req.responseType = "arraybuffer";
+    req.onload = function(e) {
+      var blob = new Blob([req.response], {type: "image/gif"});
+      var reader = new FileReader();
+      reader.onload = function(e) {
         var img = $('<img/>',{
-          src: "data:image/gif;base64," + frames,
+          src: reader.result,
           width: width,
           height: height
         });
@@ -536,8 +540,10 @@ $(document).ready(function() {
           });
           placeholder.replaceWith(img);
         });
-      }
-    });
+      };
+      reader.readAsDataURL(blob);
+    };
+    req.send(null);
 
     new_msg.prepend(placeholder);
     new_msg.prepend($('<a/>', {'class':'anchor', name: message.id}));

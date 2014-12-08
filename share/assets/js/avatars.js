@@ -242,7 +242,7 @@ $(document).ready(function() {
         , c = document.createElement('canvas')
         , ctx = c.getContext('2d')
         , frames_start = 0
-        , frames_end = frames.length - 1
+        , frames_end = frames.length
         , imgs = images(frames)
 
       var submit = $('<button/>', {
@@ -307,7 +307,7 @@ $(document).ready(function() {
       submit.on("click", function() {
         done();
         reframe(0.7, true); // compress
-        cb(frames.slice(frames_start, frames_end), w, h, caption);
+        cb(frames.slice(frames_start, frames_end + 1), w, h, caption);
       });
 
       input.append(submit, cancel, controls);
@@ -357,11 +357,11 @@ $(document).ready(function() {
       function play(index) {
         if (fwd && index > frames_end) {
           fwd = false;
-          index--;
+          index = frames_end - 1;
         }
         else if (!fwd && index < frames_start) {
           fwd = true;
-          index++;
+          index = frames_start + 1;
         }
         if (!imgs[index]) {
           console.log(imgs, index, fwd);

@@ -242,7 +242,7 @@ $(document).ready(function() {
         , c = document.createElement('canvas')
         , ctx = c.getContext('2d')
         , frames_start = 0
-        , frames_end = frames.length
+        , frames_end = frames.length - 1
         , imgs = images(frames)
 
       var submit = $('<button/>', {
@@ -264,6 +264,7 @@ $(document).ready(function() {
       );
 
       function done() {
+        clearTimeout(timer);
         placeholder.html(video);
         video.get(0).play();
         cancel.remove();
@@ -305,8 +306,8 @@ $(document).ready(function() {
       });
 
       submit.on("click", function() {
-        done();
         reframe(0.7, true); // compress
+        done();
         cb(frames.slice(frames_start, frames_end + 1), w, h, caption);
       });
 

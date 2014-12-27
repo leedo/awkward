@@ -245,7 +245,7 @@ ul#share, ul#controls {
 }
 
 ul#share {
-  display: block;
+  display: none;
 }
 
 ul#controls li,

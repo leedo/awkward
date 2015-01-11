@@ -233,11 +233,6 @@ $(document).ready(function() {
       var channel = channels.find('.channel.active')
         , input = channel.find('li.input')
         , placeholder = input.find('.placeholder')
-        , range = $('<div/>', {'class':'range'})
-        , pos = $('<div/>', {'class':'range-pos'})
-        , fill = $('<div/>', {'class':'range-fill'})
-        , start = $('<div/>', {'class':'range-start'})
-        , end = $('<div/>', {'class':'range-end'})
         , caption = ""
         , c = document.createElement('canvas')
         , ctx = c.getContext('2d')
@@ -245,30 +240,19 @@ $(document).ready(function() {
         , frames_end = frames.length - 1
         , imgs = images(frames)
 
-      var submit = $('<button/>', {
-        'type': 'button',
-        'class': 'btn btn-success'
-      }).html("Submit");
-
-      var cancel = $('<button/>', {
-        'type': 'button',
-        'class': 'btn btn-default'
-      }).html("Cancel");
-
-      var controls = $('<ul/>', {
-        'id': 'controls'
-      }).append(
-        $('<li/>', {"class":"flip"}).html("⇄")
-      ).append(
-        $('<li/>', {"class":"caption"}).html("T").css("font-family","serif")
-      );
+      var range = $(Handlebars.compile($('#gif-range').html())());
+      var controls = $(Handlebars.compile($('#gif-controls').html())());
+      var end = range.find(".range-end")
+        , pos = range.find(".range-pos")
+        , fill = range.find(".range-fill")
+        , start = range.find(".range-start")
+        , end = range.find(".range-end");
 
       function done() {
         clearTimeout(timer);
         placeholder.html(video);
         video.get(0).play();
-        cancel.remove();
-        submit.remove();
+        input.off("click");
         controls.remove();
       }
 
@@ -287,12 +271,17 @@ $(document).ready(function() {
         play(0);
       }
 
-      controls.on("click", "li.caption", function() {
-        caption = prompt("Caption");
-        reframe(1.0, false);
+      input.append(controls);
+
+      input.on("click", "li.caption", function() {
+        var _caption = prompt("Caption");
+        if (_caption !== null) {
+          caption = _caption;
+          reframe(1.0, false);
+        }
       });
 
-      controls.on("click", "li.flip", function() {
+      input.on("click", "li.flip", function() {
         ctx.translate(c.width, 0);
         ctx.scale(-1, 1);
         reframe(1.0, false);
@@ -300,25 +289,23 @@ $(document).ready(function() {
         ctx.scale(-1, 1);
       });
 
-      cancel.on("click", function() { 
+      input.on("click", "button.gif-cancel", function() { 
         done();
         cb();
       });
 
-      submit.on("click", function() {
+      input.on("click", "button.gif-submit", function() {
         reframe(0.7, true); // compress
         done();
         cb(frames.slice(frames_start, frames_end + 1), w, h, caption);
       });
 
-      input.append(submit, cancel, controls);
-
       c.width = w;
       c.height = h;
       video.replaceWith(c);
 
-      range.append(fill, pos, start, end);
       placeholder.append(range);
+
       end.css({left: (range.width() - end.width()) + "px"});
 
       var offset = range.offset().left;
@@ -675,39 +662,10 @@ $(document).ready(function() {
   }
 
   function renderChannel(name, id) {
-    var elem = $('<div/>', {
-      'id': id,
-      'data-chan': id,
-      'data-name': name,
-      'class': 'channel'
-    });
-    var ol = $('<ol/>', {
-      'class': 'messages',
-      cellspacing: 0,
-      cellpadding: 0,
-      border: 0
-    });
-    var li = $('<li/>',{'class':'input'});
-    var placeholder = $('<div/>', {'class':'placeholder'});
-    var input = $('<button/>', {
-      "type": "button",
-      "class": "record btn btn-danger"
-    }).html("Record");
-    li.append(placeholder);
-    li.append(input);
-    ol.append(li);
-    elem.append(ol);
+    var elem = $(Handlebars.compile($("#awkwarde-channel").html())({id: id, name: name}));
     channels.append(elem);
-
-    var a = $('<a/>', {href: '#'}).text(name);
-    var close = $('<button/>', {
-      type: "button",
-      'class': "close",
-      'aria-hidden':"true"
-    }).html("×");
-    var li = $('<li/>', {'data-chan': id}).html(a);
-    nav.append(li.append(a.prepend(close)));
-
+    var link = $(Handlebars.compile($("#awkwarde-channel-link").html())({id: id, name: name}));
+    nav.append(link);
     focusChannel(id);
   }
 

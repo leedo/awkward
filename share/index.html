@@ -22,8 +22,48 @@
     <ul id="share">
       <li id="imgur"><i class="fa fa-share"></i></li>
     </ul>
+
+    <script id="gif-range" type="text/x-handlebars-template">
+      <div class="range">
+        <div class="range-fill"></div>
+        <div class="range-pos"></div>
+        <div class="range-start"></div>
+        <div class="range-end"></div>
+      </div>
+    </script>
+
+    <script id="gif-controls" type="text/x-handlebars-template">
+      <button type="button" class="gif-submit btn btn-success">Submit</button>
+      <button type="button" class="gif-cancel btn btn-default">Cancel</button>
+      <ul class="editor-controls">
+        <li class="flip">⇄</li>
+        <li class="caption" style="font-family:serif">T</li>
+      </ul>
+    </script>
+
+    <script id="awkwarde-channel" type="text/x-handlebars-template">
+      <div id="{{id}}" data-chan="{{id}}" data-name="{{name}}" class="channel">
+        <ol class="messages">
+          <li class="input">
+            <div class="placeholder"></div>
+            <button type="button" class="record btn btn-danger">Record</button>
+          </li>
+        </ol>
+      </div>
+    </script>
+
+    <script id="awkwarde-channel-link" type="text/x-handlebars-template">
+      <li data-chan="{{id}}">
+        <a href="#">
+          <button type="button" class="close" aria-hidden="true">×</button>
+          {{name}}
+        </a>
+      </li>
+    </script>
+
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+    <script src="/assets/js/handlebars.js"></script>
     <script src="/assets/js/base64.js"></script>
     <script src="/assets/js/adapter.js"></script>
     <script src="/assets/js/avatars.js?bust=9"></script>

@@ -234,7 +234,7 @@ div.placeholder video {
   display: block;
 }
 
-ul#share, ul#controls {
+ul#share, ul.editor-controls {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -248,7 +248,7 @@ ul#share {
   display: none;
 }
 
-ul#controls li,
+ul.editor-controls li,
 ul#share li {
   float: left;
   padding: 5px;
@@ -257,7 +257,7 @@ ul#share li {
   color: #fff;
 }
 
-ul#controls li:hover,
+ul.editor-controls li:hover,
 ul#share li:hover {
   text-shadow: 0 1px 3px rgba(0,0,0,0.25);
 }

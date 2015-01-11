@@ -131,17 +131,8 @@ $(document).ready(function() {
   });
 
   function showImgurPopover(elem, url) {
-    var span = $('<span/>');
-    var link = $('<a/>', {href: url}).text(url);
-    var close = $('<button/>', {
-      type: "button",
-      'class': "close",
-      'aria-hidden':"true",
-      style: "display:inline-block;float:none;padding-left:5px"
-    }).html("×");
-    close.on("click", function() {elem.popover("destroy")});
-    span.append(link).append(close);
-
+    var span = $($(Handlebars.compile($('#imgur-popover').html())({url: url})));
+    span.on("click", ".close", function() {elem.popover("destroy")});
     elem.popover("destroy");
     elem.popover({
       placement: "bottom",

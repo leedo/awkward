@@ -225,6 +225,7 @@ $(document).ready(function() {
         , input = channel.find('li.input')
         , placeholder = input.find('.placeholder')
         , caption = ""
+        , speed = 1
         , c = document.createElement('canvas')
         , ctx = c.getContext('2d')
         , frames_start = 0
@@ -252,7 +253,7 @@ $(document).ready(function() {
         ctx.fillStyle = "#fff";
         ctx.font = "20px sans-serif";
         ctx.textAlign = "center";
-        for (var i=0; i< frames.length; i++) {
+        for (var i=0; i< frames.length; i += speed) {
           ctx.drawImage(imgs[i], 0, 0, c.width, c.height);
           if (flatten)
             ctx.fillText(caption, c.width / 2, c.height - 10);
@@ -268,6 +269,14 @@ $(document).ready(function() {
         var _caption = prompt("Caption");
         if (_caption !== null) {
           caption = _caption;
+          reframe(1.0, false);
+        }
+      });
+
+      input.on("click", "li.delay", function() {
+        var _speed = prompt("Speed", speed);
+        if (_speed !== null) {
+          speed = parseInt(_speed);
           reframe(1.0, false);
         }
       });
@@ -288,7 +297,11 @@ $(document).ready(function() {
       input.on("click", "button.gif-submit", function() {
         reframe(0.7, true); // compress
         done();
-        cb(frames.slice(frames_start, frames_end + 1), w, h, caption);
+        var complete = [];
+        for (var i=0; i< frames.length; i += speed) {
+          complete.push(frames[i]);
+        }
+        cb(complete.slice(frames_start, frames_end + 1), w, h, caption);
       });
 
       c.width = w;
@@ -336,15 +349,15 @@ $(document).ready(function() {
       function play(index) {
         if (fwd && index > frames_end) {
           fwd = false;
-          index = frames_end - 1;
+          index = frames_end - speed;
         }
         else if (!fwd && index < frames_start) {
           fwd = true;
-          index = frames_start + 1;
+          index = frames_start + speed;
         }
         if (!imgs[index]) {
           console.log(imgs, index, fwd);
-          timer = setTimeout(play, 100, fwd ? index + 1 : index - 1);
+          timer = setTimeout(play, 100, fwd ? index + speed : index - speed);
           return;
         }
         ctx.drawImage(imgs[index], 0, 0);
@@ -353,7 +366,7 @@ $(document).ready(function() {
         ctx.textAlign = "center";
         ctx.fillText(caption, c.width / 2, c.height - 10);
         pos.css({left: (index * segment_size) + "px"});
-        timer = setTimeout(play, 100, fwd ? index + 1 : index - 1);
+        timer = setTimeout(play, 100, fwd ? index + speed : index - speed);
       }
 
       function stop() {
@@ -403,7 +416,7 @@ $(document).ready(function() {
     ctx.scale(-1, 1);
 
     var frames = [];
-    var limit = 25;
+    var limit = 30;
     var frame = function(count) {
       progress.attr('value', 100 - (((limit - count) / limit) * 100));
       ctx.drawImage(v, 0, 0, c.width, c.height);

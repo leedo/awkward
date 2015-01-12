@@ -253,13 +253,23 @@ $(document).ready(function() {
         ctx.fillStyle = "#fff";
         ctx.font = "20px sans-serif";
         ctx.textAlign = "center";
-        for (var i=0; i< frames.length; i += speed) {
-          ctx.drawImage(imgs[i], 0, 0, c.width, c.height);
+
+        var temp = images(frames);
+        for (var i=0; i< frames.length; i++) {
+          ctx.drawImage(temp[i], 0, 0, c.width, c.height);
           if (flatten)
             ctx.fillText(caption, c.width / 2, c.height - 10);
           frames[i] = c.toDataURL("image/jpeg", quality);
         }
-        imgs = images(frames);
+
+        temp = [];
+        for (var i=0; i < frames.length; i+= speed) {
+          temp.push(frames[Math.floor(i)]);
+        }
+
+        frames_end = temp.length - 1;
+        segment_size = parseInt(range.width() / temp.length);
+        imgs = images(temp);
         play(0);
       }
 
@@ -349,15 +359,15 @@ $(document).ready(function() {
       function play(index) {
         if (fwd && index > frames_end) {
           fwd = false;
-          index = frames_end - speed;
+          index = frames_end - 1;
         }
         else if (!fwd && index < frames_start) {
           fwd = true;
-          index = frames_start + speed;
+          index = frames_start + 1;
         }
         if (!imgs[index]) {
           console.log(imgs, index, fwd);
-          timer = setTimeout(play, 100, fwd ? index + speed : index - speed);
+          timer = setTimeout(play, 100, fwd ? index + 1 : index - 1);
           return;
         }
         ctx.drawImage(imgs[index], 0, 0);
@@ -366,7 +376,7 @@ $(document).ready(function() {
         ctx.textAlign = "center";
         ctx.fillText(caption, c.width / 2, c.height - 10);
         pos.css({left: (index * segment_size) + "px"});
-        timer = setTimeout(play, 100, fwd ? index + speed : index - speed);
+        timer = setTimeout(play, 100, fwd ? index + 1 : index - 1);
       }
 
       function stop() {
